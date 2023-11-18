@@ -1,0 +1,19 @@
+
+
+RECORD_TITLE_TOO_LONG = "标题太长。最大长度为128个汉字，256个字母"
+RECORD_STATUS_ERROR = "状态错误，必须是：0 草稿，1 发布 2 取消"
+RECORD_SHOW_USERINFO_ERROR = "状态错误，必须是：0 不显示，1 显示"
+RECORD_ADD_SUCCESS = "创建成功"
+RECORD_MODIFY_SUCCESS = "修改成功"
+RECORD_TITLE_ERROR = "缺少必要字段title" 
+RECORD_UUID_ERROR = "缺少必要字段recorduuid"  
+RECORD_UUID_NAME_ERROR = "缺少必要字段recorduuid和recorder_name" 
+RECORD_DELETE_SUCCESS = "删除成功" 
+RECORD_PARAM_ERROR_NEED_UUID = "缺少uuids参数"
+RECORD_PARAM_ERROR_NEED_UUID_VALUES = "缺少uuids和values参数"
+RECORD_NOT_FOUND = "没有相关登记"
+RECORD_TIMEOUT = "登记已截止"
+RECORD_DUPLICATED_USERINFO = "不能重复登记"
+RECORD_USERINFO_SUCCESS = "已登记" 
+RECORD_USERINFO_DATA_ERROR = "数据不一致" 
+RECORD_USERINFO_NAME_TOOLONG= "用户信息太长，最多128个汉字"# ""ERROR

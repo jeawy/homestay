@@ -1,0 +1,229 @@
+
+
+
+.linkitems a
+{
+    font-size: 12px;
+    color:rgb(181, 182, 182);
+}
+
+.linkitems ul{
+    background: rgb(72, 72, 74)
+}
+.linkitems
+{
+   color: rgb(181, 182, 182);
+}
+.lable{
+    color: #fff;
+    background-color: #ea5014;
+    padding: 0px 4px;
+    position: relative;
+    font-size:10px;
+    border-radius: 4px;
+}
+.lable:after{
+    content:'';
+    position:absolute;
+    top:100%;
+    left:4px;
+    width:0; height:0;
+    border-width:2px;
+    border-style:solid; 
+    border-color:#ea5014 transparent transparent #ea5014;
+}
+.linkitems li{
+   padding:0 0 15px 30px;
+}
+.linkitems ul li:first-child{
+    padding-top: 15px;
+    margin-top: 0px;
+}
+.group-title img{
+    height: 14px;
+}
+.linkitems>div{
+    padding: 20px 15px;
+    background-color:#2b2b2c;
+    border-top: 1px solid #4b4b4c;
+    font-size: 12px;
+}
+.rota{
+    transform:rotate(45deg);
+-ms-transform:rotate(45deg); 	/* IE 9 */
+-moz-transform:rotate(45deg); 	/* Firefox */
+-webkit-transform:rotate(45deg); /* Safari 和 Chrome */
+-o-transform:rotate(45deg); 	/* Opera */
+}
+.linkitems>div:last-child>div{
+    margin-top: 10px;
+}
+.linkitems>div:first-child{
+   border: none;
+}
+.footer_links{
+    display: none;
+}
+.linkitems a.round-btn{
+margin-right: 10px;
+margin-top: 6px;
+}
+.linkitems>.phone-wrap{
+    padding: 20px 50px;
+}
+.phone
+{   
+    color: #6c6c6c;
+    font-size: 18px;
+}
+
+.qrcode img{
+    width: 100%;
+}
+.qrcode{
+    width: 100px;
+   /*  background-color: rgb(226, 227, 227); */
+}
+/* .qrcode::before{
+    width: 60px;
+    height: 20px;
+    background-color: rgb(226, 227, 227);
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 20px;
+}
+.qrcode::after{
+    width: 60px;
+    height: 20px;
+    background-color: rgb(226, 227, 227);
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20px; 
+} */
+.online-div{
+    line-height: initial!important;
+    font-size: 12px;
+}
+a.custom-service{
+    color: #ea5014;
+    padding: 6px 12px;
+    border: 1px solid #ea5014;
+    font-size: 12px;
+}
+a.custom-service:link{
+    color: #ea5014;
+}
+.custom-service img{
+    height: 18px;
+    margin-bottom: 3px;
+}
+a.round-btn{
+    text-align: center;
+    padding-top: 1px;
+    display: block;
+    float: left;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: rgb(221, 221, 221);
+}
+.round-btn img{
+    height: 16px;
+    max-width: 16px;
+    vertical-align: text-top;
+    padding: 1px;
+}
+
+.online-div p{
+    margin: 6px 0 14px;
+}
+/* 群二维码样式 */
+.code{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 240px;
+    padding: 10px;
+    box-shadow: 0 2px 10px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+    z-index: 1002;
+    background-color: #fff;
+  }
+  .code>div:first-child{
+    padding: 0 8px 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  .code>img{
+    width: 100%;
+    height: auto;
+  }
+  .close_code{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+  .close_code:hover{
+    opacity: .8;
+  }
+  .code-bg{
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    opacity: .6;
+    background-color: #000;
+    z-index: 1001;
+  }
+  .code-wrap{
+    display: none;
+  }
+  #qq_group{
+      cursor: pointer;
+  }
+  /* .fs12{
+      font-size: 12px;
+      padding: 0 15px 10px;
+  } */
+  /* 底部 */
+
+
+.code-wrap {
+    display: none;
+}
+.code-bg {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    opacity: .6;
+    background-color: #000;
+    z-index: 1001;
+}
+.code {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 240px;
+    padding: 10px;
+    box-shadow: 0 2px 10px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+    z-index: 1002;
+    background-color: #fff;
+}
+.code>div:first-child {
+    padding: 0 8px 10px;
+    border-bottom: 1px solid #ddd;
+}
+.close_code {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+.code>img {
+    width: 100%;
+    height: auto;
+}

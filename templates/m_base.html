@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>{% block pagetitle%}{% endblock%}</title>
+    <!-- Bootstrap -->
+    <link type="text/css" href="/staticend/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/staticend/font-awesome/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+    <link href="/staticend/css/m_base.css"  rel="stylesheet">
+    <link href="/staticend/css/m_footer.css"  rel="stylesheet"> 
+    <script type="text/javascript" src="/staticend/jquery/dist/jquery.min.js"></script>
+   <!--  <script src="https://s22.cnzz.com/z_stat.php?id=1273465908&web_id=1273465908" language="JavaScript"></script> -->
+    <!--扩展css开始-->
+    {% block css %} 
+    {% endblock %}
+    <!--扩展css结束-->
+</head> 
+<body>
+        {% if request.user.is_anonymous %}
+        <input type="hidden" id="userlogin" value="0" />
+        {% else %}
+        <input type="hidden" id="userlogin" value="1" />
+        {% endif %}
+    {% block menu %}
+    <!--菜单开始-->
+    
+    <!--菜单结束-->
+    {% endblock %} 
+
+   <!--主要内容开始-->
+    {% block content %} 
+    {% endblock %}  
+    <!--主要内容结束-->
+    {% block links %} 
+        <div>
+          <span class="pointer" data-toggle="modal" data-target="#law">法律声明</span> | <span class="pointer" data-toggle="modal" data-target="#privance">隐私条款</span>
+          <br>西安字节音图电子科技有限公司<br/>
+          <span>陕ICP备2021016019号&nbsp;&nbsp;</span>
+          <a href="http://www.beian.gov.cn/portal/registerSystemInfo" target="_black">
+            <img class="emblem" src="/staticend/img/gongan.png"/><span>公安联网备案：&nbsp;61019002001934</span>
+            </a> 
+        <div class="code-wrap">
+            <div class="code-bg">
+        
+            </div>
+            <div class="code">
+                <div>一数科技QQ群
+                    <img class="close_code pull-right" src="/staticend/img/icon/close_b.svg" />
+                </div>
+                <img src="/staticend/img/qqqun.jpg" />
+            </div>
+        </div>
+        <div class="code-wrap">
+            <div class="code-bg">
+        
+            </div>
+            <div class="code">
+                <div>一数科技微信兴趣群
+                    <img class="pull-right close_code" src="/staticend/img/icon/close_b.svg" />
+                </div>
+                <img src="/staticend/img/xinqu.jpg" />
+                <div class="fs12 grey">扫描二维码，加入兴趣小组</div>
+            </div>
+        </div>
+    </div><!-- end items -->
+<!-- end link footer --> 
+ 
+    {% endblock %}
+    
+    <script type="text/javascript" src="/staticend/bootstrap/dist/js/bootstrap.min.js"></script>
+     
+    <!--扩展js开始-->
+    {% block js %}
+    {% endblock %}
+    <!---扩展js结束-->
+</body>
+
+</html>

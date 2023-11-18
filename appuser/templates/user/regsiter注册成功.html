@@ -1,0 +1,107 @@
+{% extends 'base.html' %} {% block title2%}用户登录 {% endblock%} {% block css %}
+<link href="/static/css/user.css" rel="stylesheet"> {% endblock %} {% block content %}
+
+
+
+
+<div class="login-wrap">
+    <header class="text-center orange success-header">
+        <img src="/static/img/noavatar.png">
+        <h4>注册成功
+            <p class="msg">您的账号可以访问以下服务</p>
+        </h4>
+        
+    </header>
+    <table class="success-content">
+        <tr>
+            <td> <img src="/static/img/luntan.png"></td>
+            <td> <img src="/static/img/guanwang.png"></td>
+            <td> <img src="/static/img/shangcheng.png"></td>
+        </tr>
+        <tr>
+            <td><a href=""><span>论坛</span></a></td>
+            <td><a href="javascript:;"><span>官网</span></a></td>
+            <td><a href="javascript:;"><span>商城</span></a></td>
+        </tr>
+    </table>
+</div>
+
+
+<!-- 弹出框 -->
+<div class="Pop-up">
+    <img class="close" src="/static/img/icon/close.svg" alt="">
+    <div class="Pop-up-title">隐私条款</div>
+    <div class="Pop-up-details">
+        <div class="details-title">1.信息的手机和使用</div>
+        <p>（1）为了以创建账户、识别账户</p>
+    </div>
+</div>
+{% endblock %} {% block js %}
+
+<script src="http://static.runoob.com/assets/jquery-validation-1.14.0/dist/jquery.validate.min.js"></script>
+
+<script type="text/javascript " src="/static/appuser/js/register.js "></script>
+
+<script>
+
+    doubleclick = false;//避免双击的代码
+    $("#sendcode").click(function () {
+        if (doubleclick == false) {
+            doubleclick = true;
+        }
+        else {
+            return;
+        }
+        var thisBtn = $(this);
+        var phone = $('#phone').val(),
+            thisEl = $(this);
+        {% if pagetype == 'findpassword' %}
+        var codetype = '1';
+        {% else %}
+        var codetype = '0';
+        {% endif %}
+
+        result = validatemobile(phone);
+        if (result['status'] == false) {
+            var txt2 = $("<lable class='error'></lable>").text(result['msg']);
+            thisBtn.parents('.relative').append(txt2);
+            $('#phone').focus();
+        } else {
+            var sec = 10;
+            $("#sendcode").attr({ "disabled": "disabled" });
+            var inter = setInterval(function () {
+                sec--;
+                if (sec == 0) {
+                    $("#sendcode").removeAttr("disabled");
+                    $("#sendcode").text("发送验证码");
+                    clearInterval(inter);
+                }
+                else {
+                    $("#sendcode").text(sec.toString() + "秒后重新发送...");
+                }
+            }, 1000);
+        }
+        $.get('/users/phonecode/' + phone + '?codetype=' + codetype, {}, function (data) {
+            //
+            if (data['status'] == 'ok') {
+                //这是那个弹出框，这是data['msg']提示信息
+                //data['msg'] = "已发送";
+                $().message(data['msg']);
+            } else {
+                $().errormessage(data['msg']);
+            }
+        });
+
+        doubleclick = false;
+
+    })
+    /* 关闭弹出窗 */
+    $('.close').click(function () {
+        $(this).parents('.Pop-up').hide();
+    })
+    /* 显示弹出 */
+    $('.rule span').click(function () {
+        $('.Pop-up').show();
+    })
+
+</script> {% endblock %}

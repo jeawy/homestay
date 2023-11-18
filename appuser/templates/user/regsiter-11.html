@@ -1,0 +1,150 @@
+{% extends 'base.html' %} {% block title2%}用户登录 {% endblock%} {% block css %}
+<link href="/static/css/user.css" rel="stylesheet"> {% endblock %} {% block content %}
+ 
+{% csrf_token %}
+<div class="login-wrap">
+ <header class="text-center orange">
+        <img src="/static/img/noavatar.png">
+        <h4>注册</h4>
+    </header>
+<form id="signup-Form" class="loginform" action="{% if pagetype == 'findpassword'%}{% url 'users:find_password' %}{% else %}{% url 'users:register' %}{% endif %}" method="post">
+    {% if pagetype == 'findpassword'%} 
+    {% else %}
+    <div class="relative">
+            <input type="text" placeholder="用户名" name="username" id="username" value="{{username}}" />
+            <img class="account" src="/static/img/icon/account.svg" alt="">
+    </div>
+    {% endif %}
+    <div class="relative">
+            <input type="text" placeholder="手机号码" name="phone" id="phone" value="{{phone}}" />
+            <img src="/static/img/icon/shouji.svg" alt="">
+    </div>
+    <div class="relative">
+            <input type="text" placeholder="手机验证码" name="phonecode" id="phonecode" />
+            <img class="key" src="/static/img/icon/yaoshi.svg" alt="">
+            <button type="button" class="proving" id="sendcode">获取验证码</button>
+    </div>
+    <div class="msg"></div>
+    <div class="relative">
+            <input type="password" placeholder="密码" name="password" id="password" />
+    <img src="/static/img/icon/password.svg" alt="">
+    </div>
+    <div class="relative">
+            <input type="password" placeholder="再次输入密码" name="confirm_password" id="confirm_password">
+    <img src="/static/img/icon/queren.svg" alt="">
+    </div>
+    
+    <div class="relative">
+        {% if pagetype == 'findpassword'%} 
+    <button type="submit" class="btn btn-block orange-bg">重置密码</button> 
+    {% else %}
+    <button type="submit" class="btn btn-block orange-bg">注<span class="con-none"></span>册</button> 
+    {% endif %}
+    {% if result %} 
+        {% if result == 'ok' %}
+        <div class="alert alert-success" role="alert">{{msg}}</div>
+        {% else %}
+        <div class="alert alert-danger" role="alert">{{msg}}</div>
+        {% endif %}
+     {% endif %}
+    </div>
+    <div class="rule"><input id="agree" type="checkbox" name="agree" id="">我已经阅读并同意遵守<span>法律声明</span>和<span>隐私条款</span></div>
+    
+</form> 
+
+ <!--    <header class="text-center orange success-header">
+        <img src="/static/img/noavatar.png">
+        <h4>注册成功</h4>
+    </header>
+<div class="success-content">
+    <p>感谢您的注册</p>
+    <a href="{% url 'apps:apps' %}"><span>3秒后为您跳转到首页</span></a>
+</div> -->
+</div>
+
+
+<!-- 弹出框 -->
+<div class="Pop-up">
+    <img class="close" src="/static/img/icon/close.svg" alt="">
+    <div class="Pop-up-title">隐私条款</div>
+    <div class="Pop-up-details">
+        <div class="details-title">1.信息的手机和使用</div>
+        <p>（1）为了以创建账户、识别账户</p>
+    </div>
+</div>
+{% endblock %} {% block js %}
+
+<script src="http://static.runoob.com/assets/jquery-validation-1.14.0/dist/jquery.validate.min.js"></script>
+
+<script type="text/javascript " src="/static/appuser/js/register.js "></script>
+
+<script>
+
+doubleclick = false;//避免双击的代码
+
+$("#sendcode").click(function(){    
+    if (doubleclick == false){
+        doubleclick =true;
+    }
+    else{
+        return;
+    }
+ var thisBtn = $(this);
+    var phone = $('#phone').val(),
+    thisEl = $(this);
+    {% if pagetype == 'findpassword'%} 
+    var codetype = '1';
+    {% else %}
+    var codetype = '0';
+    {% endif %}
+
+    result = validatemobile(phone);
+    if (result['status'] == false){
+        thisBtn.parents('.relative').find('.error').remove();
+        var txt2=$("<label id='code-error' class='error'></label>").text(result['msg']);
+        thisBtn.parents('.relative').append(txt2);
+        $('#phone').focus(); 
+    }else{
+        var sec=10;
+        $("#sendcode").attr({"disabled":"disabled"});
+        var inter = setInterval(function(){
+            sec --;
+            if (sec ==0){
+                $("#sendcode").removeAttr("disabled");
+                $("#sendcode").text("发送验证码");
+                clearInterval(inter);
+            }
+            else{
+                $("#sendcode").text(sec.toString() +"秒后重新发送..."); 
+            } 
+        }, 1000); 
+    }
+    $.get('/users/phonecode/'+phone+'?codetype='+codetype, {}, function(data){
+                    //
+                    if(data['status'] == 'ok'){
+                        //
+                        $().message(data['msg']);
+                    }else{
+                        $().errormessage(data['msg']);
+                    }
+    });
+     
+    doubleclick = false;
+    
+})
+    /* 关闭弹出窗 */
+    $('.close').click(function(){
+        $(this).parents('.Pop-up').hide();
+    })
+    /* 显示弹出 */
+    $('.rule span').click(function(){
+        $s('.Pop-up').show();
+    })
+    //三秒跳转
+    /* $(document).ready(function(){
+    var toHome = setInterval(function(){
+        window.location.href="{% url 'apps:apps' %}"
+    }, 3000);  
+})*/
+</script>
+{% endblock %}

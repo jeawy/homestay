@@ -1,0 +1,40 @@
+{% extends 'm_base.html' %}
+{% block fixed_menu_class %}fixed_menu_class{%endblock%}
+{% block pagetitle%}社区互通{% endblock%}
+{% block links %}{% endblock%}
+ {% block css %}
+ <link rel="stylesheet" href="/staticend/css/swiper.css">
+ <link href="/staticend/css/m_hostpage.css" rel="stylesheet">
+{% endblock %} 
+{% block content %}
+<div class="container-fluid content">
+    <div class="title">{{title}}</div>
+    <div class="second">
+        <div class="username">{{username}}</div>
+        <div class="date">{{date}}</div>
+    </div>
+    <div class="content">
+        <pre class="pre">{{content |safe}}</pre> 
+    </div>  
+</div>
+<div class="app">
+    <a href="map2family://entity_uuid={{entity_uuid}}&entity_type={{entity_type}}">
+        <img class="biglogo" src="/staticend/img/logo.png" /> 
+        <div class="txt">打开社区互通APP, 评论、点赞</div>
+    <a> 
+</div>
+    <!--底部开始-->
+	<footer class="container clearfix">
+            <div class="pull-left">
+                <div class="logo"> <img class="f-logo" src="/staticend/img/logo.png" /></div>
+                <div class="company">
+                    2019-2022©字节音图&nbsp;<br/>
+                    <span>陕ICP备2021016019号</span> <br/>
+                    <a href="http://www.beian.gov.cn/portal/registerSystemInfo" target="_black">
+                    <img class="emblem" src="/staticend/img/gongan.png"/><span>公安联网备案号:61019002001934</span>
+                    </a>
+                </div>  
+            </div> 
+    </footer>
+     
+{% endblock %}  

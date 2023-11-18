@@ -1,0 +1,195 @@
+/* 通用 */
+@font-face
+{
+font-family: lanting;
+src: url('/static/font/lanting.ttf');
+}
+.lanting,.image-text{
+    font-family: lanting; 
+}
+.a:focus, a:hover{
+    color: #ea5014;
+}
+a{
+    color:inherit;
+}
+li{
+    list-style: none;
+}
+.emblem{
+    height:13px;
+    margin-right: 2px;
+}
+.fs30{
+    font-size: 30px;
+}
+ul{
+    margin: 0;
+    padding: 0;
+}
+.fs12{
+    font-size: 12px;
+}
+.p-r{
+    position: relative;
+}
+.btn-text-white{
+    color:white;
+}
+.m60{
+    margin: 30px 0;
+}
+.fs16{
+    font-size: 16px;
+}
+.common-btn {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    min-width: 100px;
+}
+
+.common-big-btn{
+    display: inline-block;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    min-width: 100px;
+}
+.common-inp{
+    display: inline-block;
+    height: 38px;
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #333;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ddd;
+    border-radius: 4px; 
+}
+.common-inp:focus,.form-control:focus {
+    border-color:#ea5014;
+    outline: none;
+} 
+.grey-btn{
+    color:#333;
+    background-color: #e5e5e5;
+}
+.orange-btn{
+    color:#fff;
+    background-color: #ea5014;
+}
+.orange{
+    color:#ea5014 !important;
+}
+.black{
+    color:#333;
+}
+.white{
+    color:white;
+}
+.mt60{
+    margin-bottom: 60px;
+}
+.iblock{
+    display: inline-block;
+}
+.orange-bg
+{
+    background-color: #ea5014;
+}
+.grey{
+    color: rgb(181, 182, 182);
+}
+.gray{
+    color: gray;
+}
+a:link,a:visited,a:hover,a:active{
+    text-decoration: none;
+}
+/* 菜单 */
+.fixed_menu_class {
+    position: absolute!important;
+    width: 100%;
+    z-index: 1000;
+}
+nav.fixed_menu_class>div.row{
+    background-color: transparent!important;
+}
+
+nav a{
+    color: #b5b5b5;
+}
+nav>div:first-child{
+    background-color: rgb(51, 51, 51);
+}
+nav.act.fixed_menu_class>div:first-child{
+    background-color: rgb(51, 51, 51)!important;
+}
+nav.act{
+    position: fixed;
+    top:0;
+    width:100%;
+    z-index: 10000;
+}
+body{
+    width: 100%!important;
+}
+nav ul{
+    background-color: #fff;
+    padding:0 15px 15px;
+}
+nav li{
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+nav .col-xs-3 img{
+    height: 20px;
+}
+a[title="站长统计"]{
+    display: none;
+}
+nav .col-xs-3{
+    padding: 18px 15px;
+}
+nav .col-xs-6 img{
+    height: 26px;
+}
+nav .col-xs-6 a{
+    display: inline-block;
+    height: 100%;
+    padding: 15px 0;
+}
+nav ul{
+    display: none;
+}
+
+/* 菜单结束 */
