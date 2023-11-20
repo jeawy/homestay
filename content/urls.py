@@ -3,7 +3,7 @@ from django.conf.urls import url
 from django.views.decorators.csrf import csrf_exempt
  
 from content.views import   CategoryView, ProductView,  ProductAnonymousView 
-app_name = "product"
+app_name = "content"
 urlpatterns = [
     # 管理
     url(r'^products/$', csrf_exempt(ProductView.as_view()), name='product'),
