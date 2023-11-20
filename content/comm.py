@@ -3,63 +3,25 @@ import pdb
 import time
 import datetime
 from property.code import SUCCESS, ERROR
-from product.models import Product,Specifications
-from product.models import PurchaseWay,Bill
-from common.fun import timeStamp
-from product.purchase_way_views import sing_goods_ways
+from content.models import   TxtContent  
+from common.fun import timeStamp 
 PERIOD_VALIDITY = 30*60     #订单有效期是30分钟 * 60秒
 
 def get_product_name(producttype):
     """
     """
     name = "公告"
-    if producttype == Product.INFORMATION:
+    if producttype == TxtContent.INFORMATION:
         name = "百事通"
-    elif producttype == Product.NOTIFICATION:
+    elif producttype == TxtContent.NOTIFICATION:
         name = "通知"
-    elif producttype == Product.ANNOUNCEMENT:
+    elif producttype == TxtContent.ANNOUNCEMENT:
         name = "公告"
-    elif producttype == Product.NEWS:
+    elif producttype == TxtContent.NEWS:
         name = "社区见闻"
     
     return name 
-
-def specifications_infos_lst(specs):
-    # 获取礼品规格详情
-    specifications_infos = []
-    for spec in specs:
-        spec_dct = {}
-        id = spec.id
-        # 礼品价格
-        price = str(spec.price)
-        # 礼品数量
-        num = spec.number
-        # 积分数量
-        coin = str(spec.coin)
-        # 礼品名称
-        name = spec.name
-        # 礼品规格名称
-        content = spec.content
-        # 兑换的数量
-        conversion_num = spec.conversion_num
-        # 交易数量
-        business_num = spec.business_num
-        # 购买方式
-        purchase_way = spec.purchase_way
-
-        spec_dct = {
-            "id":id,
-            "price":price,
-            "num":num,
-            "coin":coin,
-            "name":name,
-            "content":content,
-            "conversion_num":conversion_num,
-            "business_num":business_num,
-            "purchase_way":purchase_way
-        }
-        specifications_infos.append(spec_dct)
-    return specifications_infos
+ 
 
 def product_info(product, detail = False):
     """
@@ -109,22 +71,7 @@ def product_infos_lst(products):
         product_infos.append(product_info(product))
     return product_infos
 
-def update_bill_closed(bills):
-    # 将订单的状态更新为关闭
-    for bill in bills:
-        # 获取现在时间
-        now = timeStamp(datetime.datetime.now())
-        # 获取到以后将计算是否过期
-        create_time = timeStamp(bill.date)
-        if now - create_time > PERIOD_VALIDITY:
-            # 订单状态改为关闭
-            bill.status = Bill.CLOSED
-            specifications = bill.specifications
-            # 恢复库存
-            specifications.number = specifications.number + bill.number
-            bill.save()
-            specifications.save()
-
+ 
 def get_bill_single_dict(bill):
     """
     获取单个订单的字典
@@ -161,21 +108,7 @@ def get_bill_single_dict(bill):
     user_dict['user_id'] = bill.user.id
     user_dict['user_name'] = bill.user.username
     bill_dict["user"] = user_dict
-    # 礼品信息
-    try:
-        spec = Specifications.objects.get(id=bill.specifications.id)
-        product_dict = {}
-        product_dict['id'] = spec.id
-        product_dict['picture'] = spec.product.picture
-        product_dict['content'] = spec.content
-        product_dict['specifications'] = spec.name
-        bill_dict["product"] = product_dict
-    except Product.DoesNotExist:
-        pass
-    # # 返回商品的支付方式
-    # bill_dict['purchase_way'] = PurchaseWay.objects. \
-    #     filter(goods_id=spec.product). \
-    #     values('purchase_way', 'coin', 'cash', 'coin_cash')
+      
     return bill_dict
 
 def get_bill_dict(bills, tag):

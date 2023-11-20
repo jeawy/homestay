@@ -21,7 +21,7 @@ logger = getLogger(True, 'gift', False)
 
 class GiftAnonymousView(View): 
     def get(self, request):
-        # 查看，应该限制在小区范围内
+        # 查看 
         result = {"status": ERROR}
         if 'uuid' in request.GET:
             # 获得单个礼品的详细信息

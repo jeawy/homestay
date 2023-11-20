@@ -8,7 +8,7 @@ from django.views import View
 from notice.comm import get_unread_notice_count 
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from product.models import Product
+from content.models import   TxtContent
 from gift.models import Gift
 from property.code import SUCCESS,ERROR 
 from aid.models import Aid

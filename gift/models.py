@@ -12,7 +12,7 @@ import os
 
 class Gift(BaseDate):
     
-    """礼品表"""
+    """商品表：特产、民宿、外卖"""
  
     uuid = models.CharField(max_length= 64, unique=True) # UUID
     # 礼品创建人

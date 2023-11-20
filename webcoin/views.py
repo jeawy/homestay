@@ -6,7 +6,7 @@ from django.db.models import Sum
 from rest_framework.views import APIView
 from django.http import HttpResponse 
 from common.logutils import getLogger
-from product.models import *
+from content.models import   *
 from property import settings
 from property.code import *
 from property.entity import EntityType 

@@ -3,7 +3,7 @@ from django.views import View
 from property.entity import EntityType
 from record.models import Record
 from aid.models import Aid
-from product.models import Product
+from content.models import   TxtContent
 from django.conf import settings
 
 class ShareView(View):
