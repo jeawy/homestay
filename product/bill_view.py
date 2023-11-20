@@ -11,12 +11,12 @@ from rest_framework.views import APIView
 from common.logutils import getLogger 
 from property import settings
 from property.code import ERROR, SUCCESS
-from gift.comm import get_bill_dict, check_number, check_express_company
-from gift.models import Bill, Gift, Specifications
-from gift.models import PurchaseWay
-from gift.comm import update_bill_closed
+from product.comm import get_bill_dict, check_number, check_express_company
+from product.models import Bill, Product, Specifications
+from product.models import PurchaseWay
+from product.comm import update_bill_closed
 import pandas as pd
-logger = getLogger(True, 'gift', False)
+logger = getLogger(True, 'product', False)
 
 
 
@@ -230,7 +230,7 @@ class BillView(APIView):
             # bill.money = money
 
             # PurchaseWay.objects. \
-            #     filter(goods_id=spec.gift). \
+            #     filter(goods_id=spec.product). \
             #     values('purchase_way', 'coin', 'cash', 'coin_cash')
             if purchase_way not in Specifications().purchase_way_list():
                 result['status'] = ERROR

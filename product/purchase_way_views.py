@@ -1,15 +1,15 @@
-from gift.models import PurchaseWay
+from product.models import PurchaseWay
 import json
 import pdb
 import datetime
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from decorators.login import login_check
-from gift.models import Gift
+from product.models import Product
 from rest_framework.views import APIView
 from common.logutils import getLogger
 from property.code import ERROR, SUCCESS  
-from gift.models import PurchaseWay
+from product.models import PurchaseWay
 
 logger = getLogger(True, 'purchase_way', False)
 
@@ -70,7 +70,7 @@ class PurchaseWayView(APIView):
             purchase_way = data['purchase_way']
             try:
                 goods_id = int(goods_id)
-                goods = Gift.objects.get(id = goods_id)
+                goods = Product.objects.get(id = goods_id)
                 content['goods'] = goods
             except:
                 result['status'] = ERROR
@@ -179,7 +179,7 @@ class PurchaseWayView(APIView):
             goods_id = request.GET['goods_id']
             try:
                 goods_id = int(goods_id)
-                goods = Gift.objects.get(id = goods_id)
+                goods = Product.objects.get(id = goods_id)
             except:
                 result['status'] = ERROR
                 result['msg'] = "没有找到该商品"
@@ -228,7 +228,7 @@ class PurchaseWayView(APIView):
             goods_id = data['goods_id']
             try:
                 goods_id = int(goods_id)
-                gift = Gift.objects.get(id = goods_id)
+                product = Product.objects.get(id = goods_id)
             except:
                 result['status'] = ERROR
                 result['msg'] = "请提供正确的要删除的商品id"

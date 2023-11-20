@@ -20,7 +20,7 @@ from cart.models import Cart
 from property.code import ZHIFUBAO, WEIXIN
 from bills.models import Bills, BillSpec
 from bills.comm import getbillno, getbill
-from gift.models import Specifications 
+from product.models import Specifications 
 from rest_framework.views import APIView
 from common.logutils import getLogger 
 logger = getLogger(True, 'bills', False)

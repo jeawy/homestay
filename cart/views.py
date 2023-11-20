@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from cart.models import Cart
 from property.code import SUCCESS, ERROR
 from django.http import HttpResponse
-from gift.models import Specifications
+from product.models import Specifications
 
 
 class CartView(APIView):
@@ -26,11 +26,11 @@ class CartView(APIView):
             "uuid",
             "number" 
         ) )
-        for gift in gifts:
-            if gift['spec__price'] is not None:
-                gift['spec__price'] = float(gift['spec__price'])
+        for product in gifts:
+            if product['spec__price'] is not None:
+                product['spec__price'] = float(product['spec__price'])
             else:
-                gift['spec__price'] = 0
+                product['spec__price'] = 0
         result = { 
             "status":SUCCESS,
             "msg": gifts

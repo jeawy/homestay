@@ -10,7 +10,7 @@ from django.conf import settings
 import os
 
 
-class Gift(BaseDate):
+class Product(BaseDate):
     
     """商品表：特产、民宿、外卖"""
  
@@ -63,7 +63,7 @@ class Specifications(models.Model):
     # 礼品规格描述
     content = models.CharField(max_length=1024,null=False)
     # 礼品外键
-    gift = models.ForeignKey(Gift, on_delete=models.CASCADE, related_name='gift_specifications', null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='gift_specifications', null=True)
     # 已经兑换的数量 = 积分兑换 +积分加现金 + 资格兑换的数量
     conversion_num = models.IntegerField(null=True,default=0)
     # 交易量  = 现金购买 + 积分兑换 +积分加现金 + 资格兑换的数量
@@ -135,7 +135,7 @@ class PurchaseWay(models.Model):
     '''商品的购买方式表'''
 
     # 商品id外键
-    goods = models.OneToOneField(Gift, on_delete=models.CASCADE )
+    goods = models.OneToOneField(Product, on_delete=models.CASCADE )
     # 购买方式 "1,2,3,4"
     COIN = 1   # 1:支持积分
     CASH = 2    # 2:支持现金

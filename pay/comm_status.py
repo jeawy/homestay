@@ -45,7 +45,7 @@ def check_orders(order):
                 order.payedmoney = payedmoney 
                 order.save() 
                 for billspec in BillSpec.objects.filter(bill = order): 
-                    if billspec.spec.gift.gifttype == 1: # 购物卡
+                    if billspec.spec.product.gifttype == 1: # 购物卡
                         # 如果购买的是购物卡，则创建购物卡，购物卡和实物商品不在一个订单中进行支付
                         card = create_card(billspec.money, cardtype=Card.VIRTUAL )
                         billspec.card = card

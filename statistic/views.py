@@ -9,7 +9,7 @@ from notice.comm import get_unread_notice_count
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from content.models import   TxtContent
-from gift.models import Gift
+from product.models import Product
 from property.code import SUCCESS,ERROR 
 from aid.models import Aid
 from community.comm import getUserCommunities
@@ -37,7 +37,7 @@ class StatisticAnonymousView(View):
                 community__uuid = communityuuid
                 ).count() # 最新社区见闻（30天内的）统计
             
-            giftcount = Gift.objects.filter(
+            giftcount = Product.objects.filter(
                 date__gte = latestday, 
                 community__uuid = communityuuid
                 ).count() # 最新积分好礼（30天内的）统计

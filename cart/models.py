@@ -1,6 +1,6 @@
 from statistics import mode
 from django.db import models
-from gift.models import Gift, Specifications
+from product.models import Product, Specifications
 from appuser.models import AdaptorUser as User
 
 

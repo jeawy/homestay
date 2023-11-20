@@ -2,7 +2,7 @@ from statistics import mode
 from django.db import models
 from basedatas.models import PayBase
 from appuser.models import AdaptorUser as User
-from gift.models import Specifications
+from product.models import Specifications
 from address.models import Address
 from card.models import Card
 

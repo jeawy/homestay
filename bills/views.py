@@ -19,7 +19,7 @@ from cart.models import Cart
 from property.code import ZHIFUBAO, WEIXIN
 from bills.models import Bills, BillSpec
 from bills.comm import getbillno, getbill
-from gift.models import Specifications 
+from product.models import Specifications 
 from rest_framework.views import APIView
 from common.logutils import getLogger 
 logger = getLogger(True, 'bills', False)
@@ -148,7 +148,7 @@ class OrderView(APIView):
                 gifttype = 0
                 for spec in specs:
                     money += spec.number * spec.price
-                    gifttype = spec.spec.gift.gifttype
+                    gifttype = spec.spec.product.gifttype
                 money = float(money)
                 result['msg'] = {
                     'status':bill.status,
@@ -353,8 +353,8 @@ class OrderView(APIView):
                             number = number,
                             name = spec_instance.name,
                             price = price,
-                            title = spec_instance.gift.title,
-                            picture = spec_instance.gift.picture,
+                            title = spec_instance.product.title,
+                            picture = spec_instance.product.picture,
                             content = spec_instance.content,
                             bill = bill, 
                             spec = spec_instance,

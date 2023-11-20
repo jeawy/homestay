@@ -2,13 +2,13 @@
 from django.conf.urls import url
 from django.views.decorators.csrf import csrf_exempt
 
-from gift.bill_view import BillView
-from gift.views import CategoryView, GiftView, SpecificationsView, GiftAnonymousView 
-from gift.purchase_way_views import PurchaseWayView
-app_name = "gift"
+from product.bill_view import BillView
+from product.views import CategoryView, GiftView, SpecificationsView, GiftAnonymousView 
+from product.purchase_way_views import PurchaseWayView
+app_name = "product"
 urlpatterns = [
     # 礼品管理
-    url(r'^gift/$', csrf_exempt(GiftView.as_view()), name='gift'),
+    url(r'^product/$', csrf_exempt(GiftView.as_view()), name='product'),
     url(r'^bill/$', csrf_exempt(BillView.as_view()), name='bill'),
     url(r'^anonymous/$', csrf_exempt(GiftAnonymousView.as_view()), name='anonymous'),
     # 规格管理

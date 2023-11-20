@@ -3,10 +3,10 @@ import pdb
 import time
 import datetime
 from property.code import SUCCESS, ERROR
-from gift.models import Gift,Specifications
-from gift.models import PurchaseWay,Bill
+from product.models import Product,Specifications
+from product.models import PurchaseWay,Bill
 from common.fun import timeStamp
-from gift.purchase_way_views import sing_goods_ways,back_sing_goods_way
+from product.purchase_way_views import sing_goods_ways,back_sing_goods_way
 PERIOD_VALIDITY = 30*60     #订单有效期是30分钟 * 60秒
 
 
@@ -52,55 +52,55 @@ def gift_infos_lst(gifts):
     # 获取礼品详情
     gift_infos = []
     
-    for gift in gifts: 
-        gift_infos.append(get_single_gift(gift))
+    for product in gifts: 
+        gift_infos.append(get_single_gift(product))
     return gift_infos
 
-def get_single_gift(gift):
+def get_single_gift(product):
     category_lst = []
     specifications_lst = []
     gift_creator_dct = {}
-    gift_creator_dct['userid'] = gift.user.id
-    gift_creator_dct['username'] = gift.user.username
-    gift_id = gift.id
+    gift_creator_dct['userid'] = product.user.id
+    gift_creator_dct['username'] = product.user.username
+    gift_id = product.id
     # 礼品内容描述
-    content = gift.content
+    content = product.content
     # 礼品图片
-    picture = gift.picture
+    picture = product.picture
     # 礼品轮播图
-    if gift.turns:
-        turns = gift.turns.split(',')
+    if product.turns:
+        turns = product.turns.split(',')
     else:
         turns = ''
     # 礼品标题
-    title = gift.title
+    title = product.title
     # 礼品类别
-    if gift.category:
-        category = gift.category.name
+    if product.category:
+        category = product.category.name
     else:
         category = ""
     # 礼品规格
-    specifications = gift.gift_specifications.all()
+    specifications = product.gift_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
-    purchase_way = back_sing_goods_way(gift.id)
+    purchase_way = back_sing_goods_way(product.id)
     
-    tag_list = [(tag.id, tag.name, tag.label) for tag in gift.tags.all()]
+    tag_list = [(tag.id, tag.name, tag.label) for tag in product.tags.all()]
     gift_dct = {
         "id":gift_id,
-        "uuid":gift.uuid,
+        "uuid":product.uuid,
         "creator_info":gift_creator_dct,
         "content":content,
         "picture":picture,
         "turns":turns,
         "title":title,
-        "isbook" : gift.isbook,
-        "gifttype" : gift.gifttype,
-        "cardtype" : gift.cardtype,
-        "ready" : gift.ready,
-        "recommend" : gift.recommend,
+        "isbook" : product.isbook,
+        "gifttype" : product.gifttype,
+        "cardtype" : product.cardtype,
+        "ready" : product.ready,
+        "recommend" : product.recommend,
         "tags" : tag_list,
         "category":category,
-        "categoryid":gift.category.id,
+        "categoryid":product.category.id,
         "specifications":specifications_lst,
         "purchase_way":purchase_way
     }
@@ -164,15 +164,15 @@ def get_bill_single_dict(bill):
         spec = Specifications.objects.get(id=bill.specifications.id)
         gift_dict = {}
         gift_dict['id'] = spec.id
-        gift_dict['picture'] = spec.gift.picture
+        gift_dict['picture'] = spec.product.picture
         gift_dict['content'] = spec.content
         gift_dict['specifications'] = spec.name
-        bill_dict["gift"] = gift_dict
-    except Gift.DoesNotExist:
+        bill_dict["product"] = gift_dict
+    except Product.DoesNotExist:
         pass
     # # 返回商品的支付方式
     # bill_dict['purchase_way'] = PurchaseWay.objects. \
-    #     filter(goods_id=spec.gift). \
+    #     filter(goods_id=spec.product). \
     #     values('purchase_way', 'coin', 'cash', 'coin_cash')
     return bill_dict
 

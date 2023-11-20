@@ -12,11 +12,11 @@ from django.http import HttpResponse
 
 from property import settings 
 from property.code import SUCCESS, ERROR 
-from gift.models import Gift, Specifications, Category 
+from product.models import Product, Specifications, Category 
 import uuid
 from tags.comm import add 
-from gift.comm import gift_infos_lst, specifications_infos_lst, get_single_gift
-logger = getLogger(True, 'gift', False)
+from product.comm import gift_infos_lst, specifications_infos_lst, get_single_gift
+logger = getLogger(True, 'product', False)
  
 
 class GiftAnonymousView(View): 
@@ -27,12 +27,12 @@ class GiftAnonymousView(View):
             # 获得单个礼品的详细信息
             giftuuid = request.GET['uuid'] 
             try:
-                gift = Gift.objects.get(uuid = giftuuid) 
+                product = Product.objects.get(uuid = giftuuid) 
                 result = { 
                     "status":SUCCESS,
-                    "msg":get_single_gift(gift)
+                    "msg":get_single_gift(product)
                   }
-            except Gift.DoesNotExist:
+            except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,
                     "msg":"未找到礼品"
@@ -81,13 +81,13 @@ class GiftAnonymousView(View):
             page = 0
             pagenum = settings.PAGE_NUM
         if qfilter is None:
-            gifts = Gift.objects.filter(
+            gifts = Product.objects.filter(
                 **kwargs).order_by("-date")[page*pagenum: (page+1)*pagenum]
-            total = Gift.objects.filter(**kwargs).count()
+            total = Product.objects.filter(**kwargs).count()
         else:
-            gifts = Gift.objects.filter(
+            gifts = Product.objects.filter(
                 Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
-            total = Gift.objects.filter(Q(**kwargs), qfilter).count()
+            total = Product.objects.filter(Q(**kwargs), qfilter).count()
         result['status'] = SUCCESS
         result['msg'] = {
             "list": gift_infos_lst(gifts),
@@ -121,10 +121,10 @@ class GiftView(APIView):
                 number__lte = 10, # 少于10个进行库存预警 
                 gift__ready = 1,
             ).count()
-            isbook = Gift.objects.filter(isbook = 1).count()
-            recommend = Gift.objects.filter(recommend = 1).count()
-            unready = Gift.objects.filter(ready = 0).count()
-            selling = Gift.objects.filter(ready = 1).count()
+            isbook = Product.objects.filter(isbook = 1).count()
+            recommend = Product.objects.filter(recommend = 1).count()
+            unready = Product.objects.filter(ready = 0).count()
+            selling = Product.objects.filter(ready = 1).count()
             result['status'] = SUCCESS
             result['msg'] = {
                 "unready":unready,
@@ -148,12 +148,12 @@ class GiftView(APIView):
             # 获得单个礼品的详细信息
             giftuuid = request.GET['uuid'] 
             try:
-                gift = Gift.objects.get(uuid = giftuuid) 
+                product = Product.objects.get(uuid = giftuuid) 
                 result = { 
                     "status":SUCCESS,
-                    "msg":get_single_gift(gift)
+                    "msg":get_single_gift(product)
                   }
-            except Gift.DoesNotExist:
+            except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,
                     "msg":"未找到礼品"
@@ -218,7 +218,7 @@ class GiftView(APIView):
         if 'mine' in request.GET:
             kwargs['user'] = user
 
-        products = Gift.objects.filter(**kwargs) 
+        products = Product.objects.filter(**kwargs) 
         result['status'] = SUCCESS
         result['msg'] = gift_infos_lst(products)
 
@@ -242,12 +242,12 @@ class GiftView(APIView):
             elif method == 'delete':
                 return self.delete(request)
 
-        gift = Gift()
+        product = Product()
         if 'title' in data and  'content' in data and 'picture' in data and 'category' in data:
             category = data['category'] 
             try:
                 category = Category.objects.get(id= category)
-                gift.category = category
+                product.category = category
             except Category.DoesNotExist:
                 result['status'] = ERROR
                 result['msg'] = "未找到相关类别"
@@ -266,35 +266,35 @@ class GiftView(APIView):
             
             if 'isbook' in data:
                 isbook = data['isbook'].strip()
-                gift.isbook = isbook 
+                product.isbook = isbook 
             
             if 'ready' in data:
                 ready = data['ready'].strip()
-                gift.ready = ready 
+                product.ready = ready 
 
             if 'recommend' in data:
                 recommend = data['recommend'].strip()
-                gift.recommend = recommend 
+                product.recommend = recommend 
 
             if 'turns' in data:
                 turns = data['turns'].strip()
-                gift.turns = turns 
+                product.turns = turns 
             
             if 'gifttype' in data:
                 gifttype = data['gifttype'].strip()
-                gift.gifttype = gifttype 
+                product.gifttype = gifttype 
             
             if 'cardtype' in data:
                 cardtype = data['cardtype'].strip()
-                gift.cardtype = cardtype 
+                product.cardtype = cardtype 
 
              
-            gift.user = user
-            gift.content = content
-            gift.title = title
-            gift.picture = picture
-            gift.uuid=uuid.uuid4()
-            gift.save()
+            product.user = user
+            product.content = content
+            product.title = title
+            product.picture = picture
+            product.uuid=uuid.uuid4()
+            product.save()
             
             
             if 'specifications' in data:
@@ -373,7 +373,7 @@ class GiftView(APIView):
                         logger.error(traceback.format_exc())
                         pass
                     try:
-                        ceatePramas['gift'] = gift
+                        ceatePramas['product'] = product
                         Specifications.objects.create( **ceatePramas)
                     except:
                         result['status'] = ERROR
@@ -396,8 +396,8 @@ class GiftView(APIView):
         if 'uuid' in data:
             uuid = data['uuid'] 
             try:
-                gift = Gift.objects.get(uuid = uuid)
-            except Gift.DoesNotExist:
+                product = Product.objects.get(uuid = uuid)
+            except Product.DoesNotExist:
                 result['status'] = ERROR
                 result['msg'] = '未能找到该id对应的礼品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
@@ -405,7 +405,7 @@ class GiftView(APIView):
             if 'title' in data:
                 title = data['title'].strip()
                 if title:
-                    gift.title = title
+                    product.title = title
                 else:
                     result['status'] = ERROR
                     result['msg'] = 'title参数不能为空'
@@ -414,7 +414,7 @@ class GiftView(APIView):
             if 'content' in data:
                 content = data['content'].strip()
                 if content:
-                    gift.content = content
+                    product.content = content
                 else:
                     result['status'] = ERROR
                     result['msg'] = 'content参数不能为空'
@@ -424,13 +424,13 @@ class GiftView(APIView):
                 picture = data['picture'].strip()
                 if picture:
                     # 删除磁盘中原有的图片文件
-                    old_picture = gift.picture
+                    old_picture = product.picture
                     try:
                         os.remove(os.path.join(settings.BASE_DIR,old_picture).replace('/','\\'))
                     except IOError:
                         pass
 
-                    gift.picture = picture
+                    product.picture = picture
                 else:
                     result['status'] = ERROR
                     result['msg'] = 'picture参数不能为空'
@@ -438,19 +438,19 @@ class GiftView(APIView):
             
             if 'gifttype' in data:
                 gifttype = data['gifttype'].strip()
-                gift.gifttype = gifttype 
+                product.gifttype = gifttype 
             
             if 'cardtype' in data:
                 cardtype = data['cardtype'].strip()
-                gift.cardtype = cardtype 
+                product.cardtype = cardtype 
 
             if 'turns' in data:
                 turns = data['turns'].strip()
                  
                 # 删除磁盘中原有的轮播图文件
                 new_turns = turns.split(",")
-                if gift.turns:
-                    old_turns = gift.turns.split(',') 
+                if product.turns:
+                    old_turns = product.turns.split(',') 
                     for old_turn in old_turns:
                         if old_turn not in new_turns:
                             try:
@@ -458,26 +458,26 @@ class GiftView(APIView):
                             except IOError:
                                 pass
                           
-                gift.turns = turns
+                product.turns = turns
                  
             if 'isbook' in data:
                 isbook = data['isbook'].strip()
-                gift.isbook = isbook 
+                product.isbook = isbook 
             
             if 'ready' in data:
                 ready = data['ready'].strip()
-                gift.ready = ready 
+                product.ready = ready 
                 
 
             if 'recommend' in data:
                 recommend = data['recommend'].strip()
-                gift.recommend = recommend 
+                product.recommend = recommend 
 
             if 'category' in data:
                 category = data['category']
                 if category:
                     category = Category.objects.get(id = category)
-                    gift.category = category
+                    product.category = category
                  
 
             if 'addtags' in data:
@@ -491,8 +491,8 @@ class GiftView(APIView):
                     addtags = json.loads(addtags)
                 for addtag in addtags:
                     status, tag = add(addtag['name'], addtag['label'])
-                    if tag not in gift.tags.all():
-                        gift.tags.add(tag)
+                    if tag not in product.tags.all():
+                        product.tags.add(tag)
 
             
             
@@ -508,7 +508,7 @@ class GiftView(APIView):
                 {"price":120.0, "number":100, "name":'加绒大衣', "coin":200.0, "content":'保暖性能很好'},
                 {"price":150.0, "number":100, "name":'貂皮大衣', "coin":300.0, "content":'保暖性能非常好'}]
                 """
-                gift.gift_specifications.all().delete()
+                product.gift_specifications.all().delete()
 
                 specifications = json.loads(data['specifications'])
 
@@ -569,10 +569,10 @@ class GiftView(APIView):
                         logger.error(traceback.format_exc())
                         pass
                      
-                    Specifications.objects.create(gift = gift,number = number, \
+                    Specifications.objects.create(product = product,number = number, \
                         name = name, price = price, coin = coin, content = content)
                      
-            gift.save()
+            product.save()
             result['status'] = SUCCESS
             result['msg'] = '修改成功'
         else:
@@ -595,26 +595,26 @@ class GiftView(APIView):
  
             for uuiditem in uuids:
                 try:
-                    gift = Gift.objects.get(uuid = uuiditem)
-                except Gift.DoesNotExist:
+                    product = Product.objects.get(uuid = uuiditem)
+                except Product.DoesNotExist:
                     continue
                 else:
                     # 删除礼品时删除磁盘中对应的图片和轮播图文件
-                    picture = gift.picture 
+                    picture = product.picture 
                     try:
                         os.remove(os.path.join(settings.BASE_DIR,picture).replace('/','\\'))
                     except IOError:
                         pass
 
-                    if gift.turns:
-                        turns = gift.turns.split(',')
+                    if product.turns:
+                        turns = product.turns.split(',')
                         for turn in turns:
                             try:
                                 os.remove(os.path.join(settings.BASE_DIR,turn).replace('/','\\'))
                             except IOError:
                                 pass
                     
-                    gift.delete()
+                    product.delete()
                     
             result['status'] = SUCCESS
             result['msg'] = '删除成功'
@@ -795,12 +795,12 @@ class SpecificationsView(APIView):
                 result['msg'] = 'product_id参数应该为int类型'
                 return HttpResponse(json.dumps(result), content_type="application/json")
             try:
-                gift = Gift.objects.get(id = product_id)
-            except Gift.DoesNotExist:
+                product = Product.objects.get(id = product_id)
+            except Product.DoesNotExist:
                 result['status'] = ERROR
                 result['msg'] = '未找到该product_id参数对应的礼品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
-            specifications = gift.gift_specifications.all().order_by('-id')
+            specifications = product.gift_specifications.all().order_by('-id')
             result['status'] = SUCCESS
             result['msg'] = specifications_infos_lst(specifications)
             return HttpResponse(json.dumps(result), content_type="application/json")
@@ -837,9 +837,9 @@ class SpecificationsView(APIView):
 
         specifications = Specifications()
         # 创建礼品规格必需参数：所属礼品product，礼品单价price，礼品数量number，礼品名称name，虚拟币价格coin
-        if 'gift' in data and 'price' in data and 'number' in data \
+        if 'product' in data and 'price' in data and 'number' in data \
             and 'name' in data and 'coin' in data and 'purchase_way' in data:
-            gift = data['gift']
+            product = data['product']
             price = data['price']
             number = data['number']
             name = data['name'].strip()
@@ -847,7 +847,7 @@ class SpecificationsView(APIView):
             purchase_way = data['purchase_way']
 
             try:
-                product_id = int(gift)
+                product_id = int(product)
                 purchase_way = int(purchase_way)
             except ValueError:
                 result['status'] = ERROR
@@ -855,8 +855,8 @@ class SpecificationsView(APIView):
                 return HttpResponse(json.dumps(result), content_type="application/json")
 
             try:
-                gift = Gift.objects.get(id = product_id)
-            except Gift.DoesNotExist:
+                product = Product.objects.get(id = product_id)
+            except Product.DoesNotExist:
                 result['status'] = ERROR
                 result['msg'] = '未找到该product参数对应的礼品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
@@ -911,7 +911,7 @@ class SpecificationsView(APIView):
                     result['msg'] = '礼品规格说明content参数不得为空'
                     return HttpResponse(json.dumps(result), content_type="application/json")
             
-            specifications.gift = gift
+            specifications.product = product
             specifications.price = price
             specifications.number = number
             specifications.name = name
@@ -920,7 +920,7 @@ class SpecificationsView(APIView):
             result['msg'] = '添加成功'
         else:
             result['status'] = ERROR
-            result['msg'] = 'gift,price,number,name,coin参数为必需参数'
+            result['msg'] = 'product,price,number,name,coin参数为必需参数'
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     
@@ -1037,28 +1037,28 @@ def check_category_exist(name, excluded_id = None):
     else:
         return Category.objects.filter(name = name)
 
-def get_single_product_dict(gift):
+def get_single_product_dict(product):
     product_dct = {}
     # 礼品创建人信息
     product_creator_dct = {}
-    product_creator_dct['userid'] = gift.user.id
-    product_creator_dct['username'] = gift.user.username
-    product_id = gift.id
+    product_creator_dct['userid'] = product.user.id
+    product_creator_dct['username'] = product.user.username
+    product_id = product.id
     # 礼品内容描述
-    content = gift.content
+    content = product.content
     # 礼品图片
-    picture = gift.picture
+    picture = product.picture
     # 礼品轮播图
-    if gift.turns:
-        turns = gift.turns.split(',')
+    if product.turns:
+        turns = product.turns.split(',')
     else:
         turns = ''
     # 礼品标题
-    title = gift.title
+    title = product.title
     # 礼品类别
-    category = gift.category.name
+    category = product.category.name
     # 礼品规格
-    specifications = gift.gift_specifications.all()
+    specifications = product.gift_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
     product_dct = {
         "id":product_id,
