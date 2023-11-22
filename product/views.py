@@ -8,8 +8,7 @@ from common.logutils import getLogger
 from datetime import datetime, timedelta
 from rest_framework.views import APIView 
 from django.views import View
-from django.http import HttpResponse
-
+from django.http import HttpResponse 
 from property import settings 
 from property.code import SUCCESS, ERROR 
 from product.models import Product, Specifications, Category 
@@ -19,10 +18,11 @@ from product.comm import gift_infos_lst, specifications_infos_lst, get_single_gi
 logger = getLogger(True, 'product', False)
  
 
-class GiftAnonymousView(View): 
+class ProductAnonymousView(View): 
     def get(self, request):
         # 查看 
         result = {"status": ERROR}
+         
         if 'uuid' in request.GET:
             # 获得单个礼品的详细信息
             giftuuid = request.GET['uuid'] 
@@ -97,7 +97,7 @@ class GiftAnonymousView(View):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
-class GiftView(APIView):
+class ProductView(APIView):
     """
     礼品管理
     """
@@ -508,7 +508,7 @@ class GiftView(APIView):
                 {"price":120.0, "number":100, "name":'加绒大衣', "coin":200.0, "content":'保暖性能很好'},
                 {"price":150.0, "number":100, "name":'貂皮大衣', "coin":300.0, "content":'保暖性能非常好'}]
                 """
-                product.gift_specifications.all().delete()
+                product.product_specifications.all().delete()
 
                 specifications = json.loads(data['specifications'])
 
@@ -800,7 +800,7 @@ class SpecificationsView(APIView):
                 result['status'] = ERROR
                 result['msg'] = '未找到该product_id参数对应的礼品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
-            specifications = product.gift_specifications.all().order_by('-id')
+            specifications = product.product_specifications.all().order_by('-id')
             result['status'] = SUCCESS
             result['msg'] = specifications_infos_lst(specifications)
             return HttpResponse(json.dumps(result), content_type="application/json")
@@ -1058,7 +1058,7 @@ def get_single_product_dict(product):
     # 礼品类别
     category = product.category.name
     # 礼品规格
-    specifications = product.gift_specifications.all()
+    specifications = product.product_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
     product_dct = {
         "id":product_id,

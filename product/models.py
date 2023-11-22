@@ -12,20 +12,22 @@ import os
 
 class Product(BaseDate):
     
-    """商品表：特产、民宿、外卖"""
+    """
+    商品表：特产、民宿、外卖
+    """
  
     uuid = models.CharField(max_length= 64, unique=True) # UUID
-    # 礼品创建人
+    # 商品创建人
     user = models.ForeignKey(User, on_delete=models.CASCADE )
-    # 礼品图片
+    # 商品图片封面图
     picture = models.CharField(max_length=200,null=True)
     # 内容描述
     content = models.TextField(null=True)
     # 轮播图
-    turns = models.TextField(null=True)
-    # 礼品标题
+    turns = models.TextField(null=True) # 分号隔开
+    # 商品标题
     title = models.CharField(max_length=200,null=False)
-    # 礼品类别
+    # 商品类别
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING,null= True )
 
     tags = models.ManyToManyField(Tags)
@@ -39,31 +41,106 @@ class Product(BaseDate):
     # 推荐 1 与未推荐0，推荐会上首页
     recommend = models.SmallIntegerField(default=0)
 
-    # 商品类型，0表示实物，1表示礼品卡、购物卡
+    # 商品类型，0表示实物，1表示商品卡、购物卡
     gifttype = models.PositiveSmallIntegerField(default = 0)
 
     # 购物卡类型：0 电子购物卡，1 实体购物卡
     cardtype = models.PositiveSmallIntegerField(default = 0)
+    
+
+    longitude = models.CharField(max_length=128, null=True)
+    latitude = models.CharField(max_length=128, null=True)
+
+    
+
+    # 以下是民宿价格及民宿的其他属性设置
+    # 工作日价格
+    workday_price = models.FloatField(null = True ) 
+    # 周末价格
+    weekday_price = models.FloatField(null = True  ) 
+    # 节假日价格
+    holiday_price = models.FloatField( null = True ) 
+    
+    # 面积
+    area = models.FloatField(null= True)
+    
+    # 地址
+    address = models.CharField(max_length=200,null=True)
+    
+    # 最早入住时间
+    checkin_earlest_time = models.TimeField(null = True)
+    # 最晚退房时间
+    checkout_latest_time = models.TimeField(null = True)
+    
+    # 退订规则
+    unsubscribe_rules = models.TextField( null= True)
+    # 入住须知
+    checkin_notice = models.TextField( null= True)
+    # 对客要求
+    customer_notice = models.TextField( null= True)
 
     class Meta:
         default_permissions = ()
         ordering = ['-date']
- 
-class Specifications(models.Model):
-    """礼品规格表"""
 
-    # 礼品库存
+
+
+class ProductImageQuerySet(models.QuerySet):
+    def delete(self, *args, **kwargs):  
+        for obj in self:
+            if obj.img:
+                path = os.path.join(settings.FILEPATH, obj.img)  
+                if os.path.isfile(path):
+                    os.remove(path)
+            if obj.share_img:
+                path = os.path.join(settings.FILEPATH, obj.share_img)  
+                if os.path.isfile(path):
+                    os.remove(path)
+
+            obj.delete()
+
+
+class ProductImagesType(models.Model):
+    # 商品中的图片，例如: 卧室图片
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    name = models.CharField(max_length=20 ) 
+    class Meta:
+        default_permissions = ()
+        ordering = ['-id']
+
+
+class ProductImages(models.Model):
+    # 商品中的图片，例如: 卧室图片 
+    img = models.CharField(max_length=200 )
+    imgtype = models.ForeignKey(ProductImagesType, on_delete=models.CASCADE)
+    
+    objects = ProductImageQuerySet.as_manager()
+
+
+    class Meta:
+        default_permissions = ()
+        ordering = ['-id']
+
+
+
+class Specifications(models.Model):
+    """商品规格表"""
+
+    # 商品库存
     number = models.IntegerField()
-    # 礼品名称
-    name = models.CharField(max_length=200,null=False)
-    # 礼品单价
+    # 商品名称
+    name = models.CharField(max_length=200,null=True) #  民宿用date字段，非民宿用这个字段
+    #  民宿用date字段 
+    date = models.DateField(null= True)  # 注意 一天不能有两个价格
+    # 商品单价
     price = models.DecimalField(max_digits=8, decimal_places=2,null=True,default=None)
     # 虚拟币数量
     coin = models.IntegerField(null=True,default=None)
-    # 礼品规格描述
+    # 商品规格描述
     content = models.CharField(max_length=1024,null=False)
-    # 礼品外键
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='gift_specifications', null=True)
+    # 商品外键
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, 
+                                related_name='product_specifications' )
     # 已经兑换的数量 = 积分兑换 +积分加现金 + 资格兑换的数量
     conversion_num = models.IntegerField(null=True,default=0)
     # 交易量  = 现金购买 + 积分兑换 +积分加现金 + 资格兑换的数量
@@ -85,7 +162,7 @@ class Specifications(models.Model):
 class Bill(BaseDate):
     """订单表"""
 
-    # 礼品规格的id
+    # 商品规格的id
     specifications = models.ForeignKey(Specifications, on_delete=models.DO_NOTHING,
                             null=True,default=None)
     # 购买的数量

@@ -80,7 +80,7 @@ def get_single_gift(product):
     else:
         category = ""
     # 礼品规格
-    specifications = product.gift_specifications.all()
+    specifications = product.product_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
     purchase_way = back_sing_goods_way(product.id)
     
