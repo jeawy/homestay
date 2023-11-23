@@ -9,12 +9,14 @@ from datetime import datetime, timedelta
 from rest_framework.views import APIView 
 from django.views import View
 from django.http import HttpResponse 
+from common.fileupload import FileUpload
 from property import settings 
 from property.code import SUCCESS, ERROR 
 from product.models import Product, Specifications, Category 
 import uuid
 from tags.comm import add 
-from product.comm import gift_infos_lst, specifications_infos_lst, get_single_gift
+from product.comm import gift_infos_lst, specifications_infos_lst,\
+editData, get_single_gift, addSpecs, setHomestayPrice
 logger = getLogger(True, 'product', False)
  
 
@@ -242,8 +244,8 @@ class ProductView(APIView):
             elif method == 'delete':
                 return self.delete(request)
 
-        product = Product()
-        if 'title' in data and  'content' in data and 'picture' in data and 'category' in data:
+        product = Product() 
+        if 'title' in data and  'content' in data   and 'category' in data:
             category = data['category'] 
             try:
                 category = Category.objects.get(id= category)
@@ -255,144 +257,34 @@ class ProductView(APIView):
                  
             title = data['title']
             content = data['content']
-            picture = data['picture']
-
-            if title and content and picture:
-                pass
-            else:
-                result['status'] = ERROR
-                result['msg'] = 'title,content,picture参数不能为空'
-                return HttpResponse(json.dumps(result), content_type="application/json")
-            
-            if 'isbook' in data:
-                isbook = data['isbook'].strip()
-                product.isbook = isbook 
-            
-            if 'ready' in data:
-                ready = data['ready'].strip()
-                product.ready = ready 
-
-            if 'recommend' in data:
-                recommend = data['recommend'].strip()
-                product.recommend = recommend 
-
-            if 'turns' in data:
-                turns = data['turns'].strip()
-                product.turns = turns 
-            
-            if 'gifttype' in data:
-                gifttype = data['gifttype'].strip()
-                product.gifttype = gifttype 
-            
-            if 'cardtype' in data:
-                cardtype = data['cardtype'].strip()
-                product.cardtype = cardtype 
-
-             
+              
+            product = editData(product, data, request)
+                  
             product.user = user
             product.content = content
-            product.title = title
-            product.picture = picture
+            product.title = title 
             product.uuid=uuid.uuid4()
             product.save()
-            
-            
-            if 'specifications' in data:
-                """
-                parms：price 礼品单价
-                parms：number 礼品数量
-                parms：name 礼品名称
-                parms：coin 礼品虚拟币价格
-                parms：content 礼品说明
-                specifications数据格式：
-                [{"price":100.0, "number":100, "name":'大衣', "coin":100.0, "content":'保暖性能好'},
-                {"price":120.0, "number":100, "name":'加绒大衣', "coin":200.0, "content":'保暖性能很好'},
-                {"price":150.0, "number":100, "name":'貂皮大衣', "coin":300.0, "content":'保暖性能非常好'}]
-                """
-                specifications = json.loads(data['specifications'])
-
-                for specification in specifications:
-                    # 获取单价
-                    ceatePramas = {}
-                    try:
-                        price = specification['price']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    else:
-                        try:
-                            if price is not None:
-                                price = float(price)
-                                ceatePramas['price'] = price
-                        except ValueError:
-                            logger.error(traceback.format_exc())
-                            continue
-                    
-                    # 获取数量
-                    try:
-                        number = specification['number']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    else:
-                        try:
-                            number = int(number)
-                            ceatePramas['number'] = number
-                        except ValueError:
-                            logger.error(traceback.format_exc())
-                            continue
-                    
-                    # 获取名称
-                    try:
-                        name = specification['name']
-                        ceatePramas['name'] = name
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    
-                    # 获取虚拟币单价
-                    try:
-                        coin = specification['coin']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    else:
-                        try:
-                            if coin is not None:
-                               coin = float(coin)
-                               ceatePramas['coin'] = coin
-                        except ValueError:
-                            logger.error(traceback.format_exc())
-                            continue
-                    
-                    # 获取说明
-                    try:
-                        content = specification['content']
-                        ceatePramas['content'] = content
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        pass
-                    try:
-                        ceatePramas['product'] = product
-                        Specifications.objects.create( **ceatePramas)
-                    except:
-                        result['status'] = ERROR
-                        result['msg'] = '该商品已经存在规格'
-                        return HttpResponse(json.dumps(result),content_type="application/json")
-
-                    
+             
+            addSpecs(product, data)
+            if 'pricemode' in data:
+                # 价格覆盖模式：0 仅覆盖日历上未设定价格的日期
+                #              1 覆盖日历所有价格
+                pricemode = int(data['pricemode'].strip())
+                setHomestayPrice(product, pricemode)
+             
             result['status'] = SUCCESS
             result['msg'] = '发布成功'
         else:
             result['status'] = ERROR
-            result['msg'] = 'content,title,picture为必需参数'
+            result['msg'] = 'content,title,category为必需参数'
         return HttpResponse(json.dumps(result), content_type="application/json")
     
     def put(self,request):
         # 修改礼品
         result = {} 
         data = request.POST
-
+        user = request.user
         if 'uuid' in data:
             uuid = data['uuid'] 
             try:
@@ -419,160 +311,18 @@ class ProductView(APIView):
                     result['status'] = ERROR
                     result['msg'] = 'content参数不能为空'
                     return HttpResponse(json.dumps(result), content_type="application/json")
-
-            if 'picture' in data:
-                picture = data['picture'].strip()
-                if picture:
-                    # 删除磁盘中原有的图片文件
-                    old_picture = product.picture
-                    try:
-                        os.remove(os.path.join(settings.BASE_DIR,old_picture).replace('/','\\'))
-                    except IOError:
-                        pass
-
-                    product.picture = picture
-                else:
-                    result['status'] = ERROR
-                    result['msg'] = 'picture参数不能为空'
-                    return HttpResponse(json.dumps(result), content_type="application/json")
             
-            if 'gifttype' in data:
-                gifttype = data['gifttype'].strip()
-                product.gifttype = gifttype 
-            
-            if 'cardtype' in data:
-                cardtype = data['cardtype'].strip()
-                product.cardtype = cardtype 
-
-            if 'turns' in data:
-                turns = data['turns'].strip()
-                 
-                # 删除磁盘中原有的轮播图文件
-                new_turns = turns.split(",")
-                if product.turns:
-                    old_turns = product.turns.split(',') 
-                    for old_turn in old_turns:
-                        if old_turn not in new_turns:
-                            try:
-                                os.remove(os.path.join(settings.BASE_DIR,old_turn).replace('/','\\'))
-                            except IOError:
-                                pass
-                          
-                product.turns = turns
-                 
-            if 'isbook' in data:
-                isbook = data['isbook'].strip()
-                product.isbook = isbook 
-            
-            if 'ready' in data:
-                ready = data['ready'].strip()
-                product.ready = ready 
-                
-
-            if 'recommend' in data:
-                recommend = data['recommend'].strip()
-                product.recommend = recommend 
-
-            if 'category' in data:
-                category = data['category']
-                if category:
-                    category = Category.objects.get(id = category)
-                    product.category = category
-                 
-
-            if 'addtags' in data:
-                # 添加标签
-                # [{'name':'新', 'label':'new'},{'name':'新1', 'label':'new1'}]
-                #
-                #
-            
-                addtags = data['addtags']
-                if isinstance(addtags, str):
-                    addtags = json.loads(addtags)
-                for addtag in addtags:
-                    status, tag = add(addtag['name'], addtag['label'])
-                    if tag not in product.tags.all():
-                        product.tags.add(tag)
-
-            
-            
-            if 'specifications' in data:
-                """
-                parms：price 礼品单价
-                parms：number 礼品数量
-                parms：name 礼品名称
-                parms：coin 礼品虚拟币价格
-                parms：content 礼品说明
-                specifications数据格式：
-                [{"price":100.0, "number":100, "name":'大衣', "coin":100.0, "content":'保暖性能好'},
-                {"price":120.0, "number":100, "name":'加绒大衣', "coin":200.0, "content":'保暖性能很好'},
-                {"price":150.0, "number":100, "name":'貂皮大衣', "coin":300.0, "content":'保暖性能非常好'}]
-                """
-                product.product_specifications.all().delete()
-
-                specifications = json.loads(data['specifications'])
-
-                for specification in specifications:
-                    # 获取单价
-                    try:
-                        price = specification['price']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    else:
-                        try:
-                            price = float(price)
-                        except ValueError:
-                            logger.error(traceback.format_exc())
-                            continue
-                    
-                    # 获取数量
-                    try:
-                        number = specification['number']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    else:
-                        try:
-                            number = int(number)
-                        except ValueError:
-                            logger.error(traceback.format_exc())
-                            continue
-                    
-                    # 获取名称
-                    try:
-                        name = specification['name']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    
-                    # 获取虚拟币单价
-                    try:
-                        coin = specification['coin']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        continue
-                    else:
-                        try:
-                            if coin is not None:
-                                coin = float(coin) 
-                            else:
-                                coin = 0
-                        except ValueError:
-                            logger.error(traceback.format_exc())
-                            continue
-                    
-                    # 获取说明
-                    try:
-                        content = specification['content']
-                    except Exception:
-                        logger.error(traceback.format_exc())
-                        pass
-                     
-                    Specifications.objects.create(product = product,number = number, \
-                        name = name, price = price, coin = coin, content = content)
-                     
+ 
+            product = editData(product, data, request)
             product.save()
+                   
+            addSpecs(product, data) 
+            if 'pricemode' in data:
+                # 价格覆盖模式：0 仅覆盖日历上未设定价格的日期
+                #              1 覆盖日历所有价格
+                pricemode = int(data['pricemode'].strip())
+                setHomestayPrice(product, pricemode)
+            
             result['status'] = SUCCESS
             result['msg'] = '修改成功'
         else:
@@ -601,18 +351,28 @@ class ProductView(APIView):
                 else:
                     # 删除礼品时删除磁盘中对应的图片和轮播图文件
                     picture = product.picture 
-                    try:
-                        os.remove(os.path.join(settings.BASE_DIR,picture).replace('/','\\'))
-                    except IOError:
-                        pass
+                    if product.picture :
+                        try: 
+                            print(os.path.join(settings.FILEPATH,picture))
+                            os.remove(os.path.join(settings.FILEPATH,picture))
+                        except IOError:
+                            pass
+                
+                    videopath = product.videopath 
+                    if videopath:
+                        try:
+                            os.remove(os.path.join(settings.FILEPATH,videopath))
+                        except IOError:
+                            pass
 
                     if product.turns:
                         turns = product.turns.split(',')
                         for turn in turns:
-                            try:
-                                os.remove(os.path.join(settings.BASE_DIR,turn).replace('/','\\'))
-                            except IOError:
-                                pass
+                            if turn:
+                                try:
+                                    os.remove(os.path.join(settings.FILEPATH,turn))
+                                except IOError:
+                                    pass
                     
                     product.delete()
                     

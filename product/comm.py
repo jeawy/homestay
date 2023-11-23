@@ -1,14 +1,337 @@
 import json
 import pdb 
 import time
-import datetime
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+import traceback
+import os
+from common.logutils import getLogger
 from property.code import SUCCESS, ERROR
 from product.models import Product,Specifications
 from product.models import PurchaseWay,Bill
 from common.fun import timeStamp
+from django.conf import settings
+from common.fileupload import FileUpload
+from common.holiday import check_holiday, get_holidays
 from product.purchase_way_views import sing_goods_ways,back_sing_goods_way
-PERIOD_VALIDITY = 30*60     #订单有效期是30分钟 * 60秒
 
+PERIOD_VALIDITY = 30*60     #订单有效期是30分钟 * 60秒
+logger = getLogger(True, 'product', False)
+
+def editData(product, data, request):
+    user = request.user
+    
+    if 'isbook' in data:
+        isbook = data['isbook'].strip()
+        product.isbook = isbook 
+     
+    if 'ready' in data:
+        ready = data['ready'].strip()
+        product.ready = ready 
+
+    if 'recommend' in data:
+        recommend = data['recommend'].strip()
+        product.recommend = recommend 
+
+    if 'turns' in data:
+        turns = data['turns'].strip()
+        product.turns = turns 
+    
+    if 'producttype' in data:
+        producttype = data['producttype'].strip()
+        product.producttype = producttype 
+    
+    if 'gifttype' in data:
+        gifttype = data['gifttype'].strip()
+        product.gifttype = gifttype 
+    
+    if 'cardtype' in data:
+        cardtype = data['cardtype'].strip()
+        product.cardtype = cardtype 
+    
+
+    if 'workday_price' in data:
+        workday_price = data['workday_price'].strip()
+        try:  
+            product.workday_price = float(workday_price) 
+        except ValueError:
+            pass
+    
+    if 'workday_price' in data:
+        workday_price = data['workday_price'].strip()
+        try:  
+            product.workday_price = float(workday_price) 
+        except ValueError:
+            pass
+    
+    if 'weekday_price' in data:
+        weekday_price = data['weekday_price'].strip()
+        try:  
+            product.weekday_price = float(weekday_price) 
+        except ValueError:
+            pass
+    if 'holiday_price' in data:
+        holiday_price = data['holiday_price'].strip()
+        try:  
+            product.holiday_price = float(holiday_price) 
+        except ValueError:
+            pass
+    
+    if 'area' in data:
+        area = data['area'].strip()
+        try:  
+            product.area = float(area) 
+        except ValueError:
+            pass
+
+    if 'address' in data:
+        address = data['address'].strip()
+        product.address = address 
+    
+    if 'longitude' in data:
+        longitude = data['longitude'].strip()
+        product.longitude = longitude 
+
+    if 'latitude' in data:
+        latitude = data['latitude'].strip()
+        product.latitude = latitude 
+    
+    if 'checkin_earlest_time' in data:
+        checkin_earlest_time = data['checkin_earlest_time'].strip()
+        product.checkin_earlest_time = checkin_earlest_time 
+    
+    if 'checkout_latest_time' in data:
+        checkout_latest_time = data['checkout_latest_time'].strip()
+        product.checkout_latest_time = checkout_latest_time
+    
+    if 'unsubscribe_rules' in data:
+        unsubscribe_rules = data['unsubscribe_rules'].strip()
+        product.unsubscribe_rules = unsubscribe_rules
+
+    if 'checkin_notice' in data:
+        checkin_notice = data['checkin_notice'].strip()
+        product.checkin_notice = checkin_notice
+
+    if 'customer_notice' in data:
+        customer_notice = data['customer_notice'].strip()
+        product.customer_notice = customer_notice
+     
+    if 'mainpic' in request.FILES:
+        # 获取主图
+        imagefile = request.FILES['mainpic']
+        pre = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        file_name, file_extension = os.path.splitext(
+            imagefile.name)
+        filename = pre+file_extension
+        FileUpload.upload(imagefile,
+                            os.path.join('product', str(user.id)),
+                            filename)
+        filepath = os.path.join('product', str(user.id), filename  )
+        if product.picture:
+            # 删除旧的缩略图
+            imgpath = os.path.join(settings.FILEPATH, product.picture )
+            if os.path.isfile(imgpath): 
+                os.remove(imgpath)
+        product.picture = filepath
+    
+    if 'videopath' in request.FILES:
+        # 获取视频路径
+        imagefile = request.FILES['videopath']
+        pre = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        file_name, file_extension = os.path.splitext(
+            imagefile.name)
+        filename = pre+file_extension
+        FileUpload.upload(imagefile,
+                            os.path.join('product', str(user.id)),
+                            filename)
+        filepath = os.path.join('product', str(user.id), filename  )
+        if product.videopath:
+            # 删除旧的 
+            imgpath = os.path.join(settings.FILEPATH, product.videopath )
+            if os.path.isfile(imgpath): 
+                os.remove(imgpath)
+        product.videopath = filepath
+    
+     
+    return product
+
+def addSpecs(product, data):
+    if 'specifications' in data:
+        """
+        parms：price 礼品单价
+        parms：number 礼品数量
+        parms：name 礼品名称
+        parms：coin 礼品虚拟币价格
+        parms：content 礼品说明
+        specifications数据格式：
+        [{"price":100.0, "number":100, "name":'大衣', "coin":100.0, "content":'保暖性能好'},
+        {"price":120.0, "number":100, "name":'加绒大衣', "coin":200.0, "content":'保暖性能很好'},
+        {"price":150.0, "number":100, "name":'貂皮大衣', "coin":300.0, "content":'保暖性能非常好'}]
+        """
+        product.product_specifications.all().delete()
+
+        specifications = json.loads(data['specifications'])
+
+        for specification in specifications:
+            # 获取单价
+            try:
+                price = specification['price']
+            except Exception:
+                logger.error(traceback.format_exc())
+                continue
+            else:
+                try:
+                    price = float(price)
+                except ValueError:
+                    logger.error(traceback.format_exc())
+                    continue
+            
+            # 获取数量
+            try:
+                number = specification['number']
+            except Exception:
+                logger.error(traceback.format_exc())
+                continue
+            else:
+                try:
+                    number = int(number)
+                except ValueError:
+                    logger.error(traceback.format_exc())
+                    continue
+            
+            # 获取名称
+            try:
+                name = specification['name']
+            except Exception:
+                logger.error(traceback.format_exc())
+                continue
+            
+            # 获取虚拟币单价
+            try:
+                coin = specification['coin']
+            except Exception:
+                logger.error(traceback.format_exc())
+                continue
+            else:
+                try:
+                    if coin is not None:
+                        coin = float(coin) 
+                    else:
+                        coin = 0
+                except ValueError:
+                    logger.error(traceback.format_exc())
+                    continue
+            
+            # 获取说明
+            try:
+                content = specification['content']
+            except Exception:
+                logger.error(traceback.format_exc())
+                pass
+                
+            Specifications.objects.create(product = product,number = number, \
+                name = name, price = price, coin = coin, content = content)
+
+
+ 
+
+def setHomestayPrice(product, pricemode):
+    # 设置民宿的价格, 如果product不是民宿，则会直接跳过 
+    product = Product.objects.get(uuid = product.uuid)
+    if product.producttype == 0 :# 民宿
+        if product.holiday_price is None and product.weekday_price is None and product.workday_price is None :
+            # 没有设置价格，直接返回
+            print('23333')
+            return
+        print('product')
+        today = datetime.now().date()
+        finalday = today + relativedelta(months = 6)
+        # 只设置最近6个月的房价
+        days = finalday - today
+        holidays = get_holidays() # 获取节假日信息
+        if pricemode == 0:# 仅覆盖日历上未设定价格的日期
+            specs = Specifications.objects.filter(product = product, date__gte = today)
+            for i in range(days.days + 1):
+                day = today + timedelta( days=i)
+                count = Specifications.objects.filter(product = product, date = day).count()
+                if count > 1: # 有重复的，删除重复的，重新设置
+                    Specifications.objects.filter(product = product, date = day).delete()
+                elif count == 1: # 已经设置过价格了，直接跳过
+                    continue
+                else: 
+                    # 之前没有设置价格
+                    pass
+                
+                create_spec = {
+                    "product" :product,
+                    "date" : day,
+                    "number" : 1,
+                    "content" : str(day.day),
+                    "purchase_way" : Specifications.CASH
+                } 
+                holiday = check_holiday(day, holidays) 
+                if holiday != "":
+                    # 是节假日,节假日价格没有设置就用周末价，周末价也没有设置就用日常价
+                    if product.holiday_price:
+                        create_spec['price'] = product.holiday_price
+                    elif product.weekday_price:
+                        create_spec['price'] = product.weekday_price
+                    elif product.workday_price:
+                        create_spec['price'] = product.workday_price
+ 
+                elif day.weekday() == 6 or day.weekday() == 5:
+                    # 周末
+                    if product.weekday_price:
+                        create_spec['price'] = product.weekday_price
+                    elif product.workday_price:
+                        create_spec['price'] = product.workday_price
+                elif product.workday_price:
+                    create_spec['price'] = product.workday_price
+                
+
+                if 'price' in create_spec:
+                   Specifications.objects.create(**create_spec) 
+                else:
+                    print("no price")
+  
+        else: # 覆盖日历所有价格
+            # 先删除原来所有的
+            Specifications.objects.filter(product = product, date__gte = today).delete() 
+
+            for i in range(days.days + 1):
+                day = today + timedelta( days=i)
+                 
+                create_spec = {
+                    "product" :product,
+                    "date" : day,
+                    "number" : 1,
+                    "content" : str(day.day),
+                    "purchase_way" : Specifications.CASH
+                } 
+                holiday = check_holiday(day, holidays) 
+                if holiday != "":
+                    # 是节假日,节假日价格没有设置就用周末价，周末价也没有设置就用日常价
+                    if product.holiday_price:
+                        create_spec['price'] = product.holiday_price
+                    elif product.weekday_price:
+                        create_spec['price'] = product.weekday_price
+                    elif product.workday_price:
+                        create_spec['price'] = product.workday_price
+ 
+                elif day.weekday() == 6 or day.weekday() == 5:
+                    # 周末
+                    if product.weekday_price:
+                        create_spec['price'] = product.weekday_price
+                    elif product.workday_price:
+                        create_spec['price'] = product.workday_price
+                elif product.workday_price:
+                    create_spec['price'] = product.workday_price
+                
+
+                if 'price' in create_spec:
+                   Specifications.objects.create(**create_spec) 
+                else:
+                    print("no price2")
 
 
 def specifications_infos_lst(specs):
@@ -100,6 +423,8 @@ def get_single_gift(product):
         "recommend" : product.recommend,
         "tags" : tag_list,
         "category":category,
+        "producttype" : product.producttype,
+        "videopath" : product.videopath,
         "categoryid":product.category.id,
         "specifications":specifications_lst,
         "purchase_way":purchase_way
@@ -111,7 +436,7 @@ def update_bill_closed(bills):
     # 将订单的状态更新为关闭
     for bill in bills:
         # 获取现在时间
-        now = timeStamp(datetime.datetime.now())
+        now = timeStamp(datetime.now())
         # 获取到以后将计算是否过期
         create_time = timeStamp(bill.date)
         if now - create_time > PERIOD_VALIDITY:

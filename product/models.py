@@ -21,13 +21,21 @@ class Product(BaseDate):
     user = models.ForeignKey(User, on_delete=models.CASCADE )
     # 商品图片封面图
     picture = models.CharField(max_length=200,null=True)
+
+    # 视频路径 
+    videopath = models.CharField(max_length=256, null=True)
+
     # 内容描述
     content = models.TextField(null=True)
     # 轮播图
     turns = models.TextField(null=True) # 分号隔开
     # 商品标题
     title = models.CharField(max_length=200,null=False)
-    # 商品类别
+    
+    # 商品类别：0 表示民宿，1 表示其他
+    producttype = models.PositiveSmallIntegerField(default= 0)
+    
+    # 商品分类
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING,null= True )
 
     tags = models.ManyToManyField(Tags)
