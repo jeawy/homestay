@@ -95,7 +95,9 @@ class Product(BaseDate):
 
 class ProductImageQuerySet(models.QuerySet):
     def delete(self, *args, **kwargs):  
+        print(self)
         for obj in self:
+            print(obj)
             if obj.img:
                 path = os.path.join(settings.FILEPATH, obj.img)  
                 if os.path.isfile(path):
@@ -112,9 +114,15 @@ class ProductImagesType(models.Model):
     # 商品中的图片，例如: 卧室图片
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     name = models.CharField(max_length=20 ) 
+    # 排序
+    sort = models.PositiveSmallIntegerField(default= 1)
     class Meta:
         default_permissions = ()
-        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(fields = ['product', 'name'], 
+            name = "productimg_type_unique")
+        ]
+        ordering = ['sort']
 
 
 class ProductImages(models.Model):
