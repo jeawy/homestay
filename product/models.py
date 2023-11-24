@@ -76,9 +76,9 @@ class Product(BaseDate):
     address = models.CharField(max_length=200,null=True)
     
     # 最早入住时间
-    checkin_earlest_time = models.TimeField(null = True)
+    checkin_earlest_time = models.CharField(max_length=50,null = True)
     # 最晚退房时间
-    checkout_latest_time = models.TimeField(null = True)
+    checkout_latest_time = models.CharField(max_length=50, null = True)
     
     # 退订规则
     unsubscribe_rules = models.TextField( null= True)
@@ -135,7 +135,7 @@ class Specifications(models.Model):
     """商品规格表"""
 
     # 商品库存
-    number = models.IntegerField()
+    number = models.IntegerField(default=1)
     # 商品名称
     name = models.CharField(max_length=200,null=True) #  民宿用date字段，非民宿用这个字段
     #  民宿用date字段 

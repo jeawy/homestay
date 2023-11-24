@@ -8,15 +8,16 @@ from common.logutils import getLogger
 from datetime import datetime, timedelta
 from rest_framework.views import APIView 
 from django.views import View
-from django.http import HttpResponse 
+from django.http import HttpResponse, HttpResponseForbidden
 from common.fileupload import FileUpload
 from property import settings 
 from property.code import SUCCESS, ERROR 
 from product.models import Product, Specifications, Category 
 import uuid
 from tags.comm import add 
-from product.comm import gift_infos_lst, specifications_infos_lst,\
-editData, get_single_gift, addSpecs, setHomestayPrice
+from product.comm import product_infos_lst, specifications_infos_lst,\
+editData, get_single_product, addSpecs, setHomestayPrice, homestay_infos_lst,\
+get_single_homestay_product
 logger = getLogger(True, 'product', False)
  
 
@@ -26,18 +27,18 @@ class ProductAnonymousView(View):
         result = {"status": ERROR}
          
         if 'uuid' in request.GET:
-            # 获得单个礼品的详细信息
+            # 获得单个商品的详细信息
             giftuuid = request.GET['uuid'] 
             try:
                 product = Product.objects.get(uuid = giftuuid) 
                 result = { 
                     "status":SUCCESS,
-                    "msg":get_single_gift(product)
+                    "msg":get_single_product(product)
                   }
             except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,
-                    "msg":"未找到礼品"
+                    "msg":"未找到商品"
                   }
             return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -61,6 +62,10 @@ class ProductAnonymousView(View):
             kwargs['recommend'] = 1 # 获取推荐产品
         else:
             kwargs['ready'] = 1
+        
+        if 'producttype' in request.GET:
+            producttype = request.GET['producttype'].strip()
+            kwargs['producttype'] = producttype
 
         
         if 'latest' in request.GET:
@@ -92,7 +97,7 @@ class ProductAnonymousView(View):
             total = Product.objects.filter(Q(**kwargs), qfilter).count()
         result['status'] = SUCCESS
         result['msg'] = {
-            "list": gift_infos_lst(gifts),
+            "list": product_infos_lst(gifts),
             "total": total,
             "sub" : sub
         } 
@@ -101,10 +106,10 @@ class ProductAnonymousView(View):
 
 class ProductView(APIView):
     """
-    礼品管理
+    商品管理
     """
     def get(self, request):
-        #查看礼品
+        #查看商品
         result = {
             
         }
@@ -145,26 +150,34 @@ class ProductView(APIView):
             ).values("gift__uuid", "gift__picture", "gift__title", "number", "name" ))
             result['status'] = SUCCESS
             return HttpResponse(json.dumps(result), content_type='application/json')  
+        
+        admin = False # 不是管理员
+        if user.is_superuser:
+            admin = True
+
 
         if 'uuid' in request.GET:
-            # 获得单个礼品的详细信息
+            # 获得单个商品的详细信息
             giftuuid = request.GET['uuid'] 
             try:
                 product = Product.objects.get(uuid = giftuuid) 
+                if product.producttype == 0:
+                    msg = get_single_homestay_product(product, detail=True, admin=admin)
+                    
+                else:
+                    msg = get_single_product(product)
                 result = { 
                     "status":SUCCESS,
-                    "msg":get_single_gift(product)
+                    "msg":msg
                   }
             except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,
-                    "msg":"未找到礼品"
+                    "msg":"未找到商品"
                   }
             return HttpResponse(json.dumps(result), content_type="application/json")
 
-
-         
-        
+ 
         if 'user_id' in request.GET:
             user_id = request.GET['user_id']
             try:
@@ -192,7 +205,13 @@ class ProductView(APIView):
         if 'title' in request.GET:
             title = request.GET['title'].strip()
             kwargs['title__icontains'] = title
+        
+        producttype = 0  
+        if 'producttype' in request.GET:
+            producttype = int(request.GET['producttype'].strip())
 
+        kwargs['producttype'] = producttype
+         
         
         if 'selling_prodcut' in request.GET:
             # 待销售商品
@@ -214,21 +233,48 @@ class ProductView(APIView):
                 kwargs['category'] = category
             except Category.DoesNotExist:
                 result['status'] = SUCCESS
-                result['msg'] = '礼品分类不存在'
+                result['msg'] = '商品分类不存在'
                 return HttpResponse(json.dumps(result), content_type="application/json")
 
         if 'mine' in request.GET:
             kwargs['user'] = user
+        
+        if "page" in request.GET and "pagenum" in request.GET:
+            # 分页
+            pagenum = request.GET['pagenum']
+            page = request.GET['page']
+            try:
+                page = int(page) - 1
+                pagenum = int(pagenum)
+            except ValueError:
+                page = 0
+                pagenum = settings.PAGE_NUM
+        else:
+            page = 0
+            pagenum = settings.PAGE_NUM
 
-        products = Product.objects.filter(**kwargs) 
+        products = Product.objects.filter(**kwargs)[page*pagenum: (page+1)*pagenum] 
+        total = Product.objects.filter(**kwargs).count()
+
+        result_list = []
+        if producttype == 0:
+            # 民宿列表
+            result_list = homestay_infos_lst(products, admin=admin)
+        else:
+            # 普通商品
+            result_list = product_infos_lst(products)
+
         result['status'] = SUCCESS
-        result['msg'] = gift_infos_lst(products)
+        result['msg'] = {
+            "list":result_list,
+            "total" : total
+        }
 
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     
     def post(self, request):
-        # 添加礼品
+        # 添加商品
         result = {}
         user = request.user 
         data = request.POST 
@@ -281,7 +327,7 @@ class ProductView(APIView):
         return HttpResponse(json.dumps(result), content_type="application/json")
     
     def put(self,request):
-        # 修改礼品
+        # 修改商品
         result = {} 
         data = request.POST
         user = request.user
@@ -291,7 +337,7 @@ class ProductView(APIView):
                 product = Product.objects.get(uuid = uuid)
             except Product.DoesNotExist:
                 result['status'] = ERROR
-                result['msg'] = '未能找到该id对应的礼品'
+                result['msg'] = '未能找到该id对应的商品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
             
             if 'title' in data:
@@ -331,7 +377,7 @@ class ProductView(APIView):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     def delete(self,request):
-        # 删除礼品
+        # 删除商品
         result = {}
 
         if len(request.POST) == 0:
@@ -349,7 +395,7 @@ class ProductView(APIView):
                 except Product.DoesNotExist:
                     continue
                 else:
-                    # 删除礼品时删除磁盘中对应的图片和轮播图文件
+                    # 删除商品时删除磁盘中对应的图片和轮播图文件
                     picture = product.picture 
                     if product.picture :
                         try: 
@@ -526,10 +572,10 @@ class CategoryView(APIView):
 
 class SpecificationsView(APIView):
     """
-    礼品规格管理
+    商品规格管理
     """ 
     def get(self, request):
-        #查看礼品规格
+        #查看商品规格
         result = {}
         kwargs = {}
         user = request.user
@@ -545,7 +591,7 @@ class SpecificationsView(APIView):
                 return HttpResponse(json.dumps(result), content_type="application/json")
             kwargs['id'] = id
         
-        # 根据礼品id进行筛选
+        # 根据商品id进行筛选
         elif 'product_id' in request.GET:
             product_id = request.GET['product_id']
             try:
@@ -558,7 +604,7 @@ class SpecificationsView(APIView):
                 product = Product.objects.get(id = product_id)
             except Product.DoesNotExist:
                 result['status'] = ERROR
-                result['msg'] = '未找到该product_id参数对应的礼品'
+                result['msg'] = '未找到该product_id参数对应的商品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
             specifications = product.product_specifications.all().order_by('-id')
             result['status'] = SUCCESS
@@ -578,15 +624,17 @@ class SpecificationsView(APIView):
         return HttpResponse(json.dumps(result), content_type="application/json")
  
     def post(self, request):
-        # 添加礼品规格
+        # 添加商品规格
         result = {}
         kwargs = {}
         user = request.user
 
-        if len(request.POST) == 0:
-            data = request.data
-        else:
-            data = request.POST
+         
+        data = request.POST
+
+        if not user.is_superuser:
+            # 价格修改只能是管理员
+            return HttpResponseForbidden()
 
         if 'method' in data:
             method = data['method'].lower()
@@ -596,9 +644,47 @@ class SpecificationsView(APIView):
                 return self.delete(request)
 
         specifications = Specifications()
-        # 创建礼品规格必需参数：所属礼品product，礼品单价price，礼品数量number，礼品名称name，虚拟币价格coin
-        if 'product' in data and 'price' in data and 'number' in data \
+        if 'productuuid' in data and 'price' in data and 'date' in data:
+            productuuid = data['productuuid']
+            price = data['price']
+            date = data['date']
+            try:
+                price = float(price)
+            except ValueError:
+                result['status'] = ERROR
+                result['msg'] = 'price格式错误'
+                return HttpResponse(json.dumps(result), content_type="application/json")
+            
+            try:
+                date = datetime.strptime(date, settings.DATEFORMAT)
+            except ValueError:
+                result['status'] = ERROR
+                result['msg'] = '日期格式错误,应该是yyyy/mm/dd格式'
+                return HttpResponse(json.dumps(result), content_type="application/json")
+            
+            try:
+                product = Product.objects.get(uuid = productuuid)
+            except Product.DoesNotExist:
+                result['status'] = ERROR
+                result['msg'] = '未找到该product参数对应的商品'
+                return HttpResponse(json.dumps(result), content_type="application/json")
+            
+            purchase_way = Specifications.CASH 
+             
+            specifications.product = product
+            specifications.price = price
+            specifications.number = 1
+            specifications.name = date.day
+            specifications.date = date
+
+            specifications.purchase_way = purchase_way
+            specifications.save()
+            result['status'] = SUCCESS
+            result['msg'] = '添加成功'
+         
+        elif 'product' in data and 'price' in data and 'number' in data \
             and 'name' in data and 'coin' in data and 'purchase_way' in data:
+            # 创建商品规格必需参数：所属商品product，商品单价price，商品数量number，商品名称name，虚拟币价格coin
             product = data['product']
             price = data['price']
             number = data['number']
@@ -618,7 +704,7 @@ class SpecificationsView(APIView):
                 product = Product.objects.get(id = product_id)
             except Product.DoesNotExist:
                 result['status'] = ERROR
-                result['msg'] = '未找到该product参数对应的礼品'
+                result['msg'] = '未找到该product参数对应的商品'
                 return HttpResponse(json.dumps(result), content_type="application/json")
 
             try:
@@ -639,7 +725,7 @@ class SpecificationsView(APIView):
                 pass
             else:
                 result['status'] = ERROR
-                result['msg'] = '礼品规格名称name参数不得为空'
+                result['msg'] = '商品规格名称name参数不得为空'
                 return HttpResponse(json.dumps(result), content_type="application/json")
 
             try:
@@ -668,7 +754,7 @@ class SpecificationsView(APIView):
                     specifications.content = content
                 else:
                     result['status'] = ERROR
-                    result['msg'] = '礼品规格说明content参数不得为空'
+                    result['msg'] = '商品规格说明content参数不得为空'
                     return HttpResponse(json.dumps(result), content_type="application/json")
             
             specifications.product = product
@@ -685,7 +771,7 @@ class SpecificationsView(APIView):
 
     
     def put(self,request):
-        # 修改礼品规格
+        # 修改商品规格
         result = {}
 
         if len(request.POST) == 0:
@@ -718,6 +804,17 @@ class SpecificationsView(APIView):
                     result['msg'] ='规格金额数字格式错误'
                     return HttpResponse(json.dumps(result), content_type="application/json")
                 specifications.price = price
+            
+            if 'date' in data:
+                date = data['date']
+                try:
+                    date = datetime.strptime(date, settings.DATEFORMAT)
+                    specifications.date = date
+                except ValueError:
+                    result['status'] = ERROR
+                    result['msg'] = '日期格式错误,应该是yyyy/mm/dd格式'
+                    return HttpResponse(json.dumps(result), content_type="application/json")
+                
 
             if 'number' in data:
                 number = data['number']
@@ -782,7 +879,7 @@ class SpecificationsView(APIView):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     def delete(self,request):
-        # 删除礼品规格
+        # 删除商品规格
         result = {}
 
         if len(request.POST) == 0:
@@ -799,25 +896,25 @@ def check_category_exist(name, excluded_id = None):
 
 def get_single_product_dict(product):
     product_dct = {}
-    # 礼品创建人信息
+    # 商品创建人信息
     product_creator_dct = {}
     product_creator_dct['userid'] = product.user.id
     product_creator_dct['username'] = product.user.username
     product_id = product.id
-    # 礼品内容描述
+    # 商品内容描述
     content = product.content
-    # 礼品图片
+    # 商品图片
     picture = product.picture
-    # 礼品轮播图
+    # 商品轮播图
     if product.turns:
         turns = product.turns.split(',')
     else:
         turns = ''
-    # 礼品标题
+    # 商品标题
     title = product.title
-    # 礼品类别
+    # 商品类别
     category = product.category.name
-    # 礼品规格
+    # 商品规格
     specifications = product.product_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
     product_dct = {

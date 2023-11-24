@@ -54,11 +54,12 @@ class ToolsView(View):
             specs = []
             if 'productuuid' in  request.GET:
                 # 查询民宿在某一天的价格
-                productuuid = request.GET['productuuid']
+                productuuid = request.GET['productuuid'] 
+                
                 specs = Specifications.objects.filter(product__uuid = productuuid).\
                     values("id", "date", "price").order_by("date") 
 
-
+            
             if firstweekday > 0:
                 lastmonth = startday - timedelta(days = 1)  # 上个月最后一天 
                 for i in range(firstweekday):
@@ -73,9 +74,9 @@ class ToolsView(View):
                     }
                     holiday = check_holiday(lastday, holidays) 
                     item['holiday'] = holiday
-                    for spec in specs:
-                        if lastday == spec['date']:
-                            item['price'] = spec['price']
+                    for spec in specs:  
+                        if lastday == spec['date']: 
+                            item['price'] = float(spec['price'])
                             break
 
                      
@@ -97,9 +98,9 @@ class ToolsView(View):
                 }
                 holiday = check_holiday(daydate, holidays) 
                 item['holiday'] = holiday
-                for spec in specs:
-                    if lastday == spec['date']:
-                        item['price'] = spec['price']
+                for spec in specs: 
+                    if daydate == spec['date']: 
+                        item['price'] = float(spec['price'])
                         break
                     
                 if weekday in data.keys():

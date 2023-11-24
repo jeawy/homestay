@@ -41,9 +41,9 @@ def editData(product, data, request):
         producttype = data['producttype'].strip()
         product.producttype = producttype 
     
-    if 'gifttype' in data:
-        gifttype = data['gifttype'].strip()
-        product.gifttype = gifttype 
+    if 'producttype' in data:
+        producttype = data['producttype'].strip()
+        product.producttype = producttype 
     
     if 'cardtype' in data:
         cardtype = data['cardtype'].strip()
@@ -158,11 +158,11 @@ def editData(product, data, request):
 def addSpecs(product, data):
     if 'specifications' in data:
         """
-        parms：price 礼品单价
-        parms：number 礼品数量
-        parms：name 礼品名称
-        parms：coin 礼品虚拟币价格
-        parms：content 礼品说明
+        parms：price 商品单价
+        parms：number 商品数量
+        parms：name 商品名称
+        parms：coin 商品虚拟币价格
+        parms：content 商品说明
         specifications数据格式：
         [{"price":100.0, "number":100, "name":'大衣', "coin":100.0, "content":'保暖性能好'},
         {"price":120.0, "number":100, "name":'加绒大衣', "coin":200.0, "content":'保暖性能很好'},
@@ -334,21 +334,23 @@ def setHomestayPrice(product, pricemode):
                     print("no price2")
 
 
+
+
 def specifications_infos_lst(specs):
-    # 获取礼品规格详情
+    # 获取商品规格详情
     specifications_infos = []
     for spec in specs:
         spec_dct = {}
         id = spec.id
-        # 礼品价格
+        # 商品价格
         price = str(spec.price)
-        # 礼品数量
+        # 商品数量
         num = spec.number
         # 虚拟币数量
         coin = str(spec.coin)
-        # 礼品名称
+        # 商品名称
         name = spec.name
-        # 礼品规格名称
+        # 商品规格名称
         content = spec.content
         # 兑换的数量
         conversion_num = spec.conversion_num
@@ -363,61 +365,147 @@ def specifications_infos_lst(specs):
             "number":num,
             "coin":coin,
             "name":name,
+            
             "content":content,
             "conversion_num":conversion_num,
             "business_num":business_num,
             "purchase_way":purchase_way
         }
+        if spec.date:
+            spec_dct['date'] = time.mktime(spec.date.timetuple())
         specifications_infos.append(spec_dct)
     return specifications_infos
 
-def gift_infos_lst(gifts):
-    # 获取礼品详情
-    gift_infos = []
+def product_infos_lst(products):
+    # 获取商品详情
+    product_infos = []
     
-    for product in gifts: 
-        gift_infos.append(get_single_gift(product))
-    return gift_infos
+    for product in products: 
+        product_infos.append(get_single_product(product))
+    return product_infos
 
-def get_single_gift(product):
-    category_lst = []
-    specifications_lst = []
-    gift_creator_dct = {}
-    gift_creator_dct['userid'] = product.user.id
-    gift_creator_dct['username'] = product.user.username
-    gift_id = product.id
-    # 礼品内容描述
-    content = product.content
-    # 礼品图片
-    picture = product.picture
-    # 礼品轮播图
+
+def homestay_infos_lst(products, date=None,  detail=False, admin = False):
+    # 获取民宿详情
+    product_infos = []
+    
+    for product in products: 
+        product_infos.append(get_single_homestay_product(product, date ,  detail , admin ))
+    return product_infos
+
+
+def get_single_homestay_product(product, date=None,  detail=False, admin = False):
+    # admin = True,返回管理信息，= False，只返回客户所需看到的信息
+    # detail 指的是详细页面中需要的数据
+    # date 指的是date这一天的价格，如果为None则默认今天
+    
+ 
+    # 商品轮播图
     if product.turns:
         turns = product.turns.split(',')
     else:
         turns = ''
-    # 礼品标题
-    title = product.title
-    # 礼品类别
+     
+    # 商品类别
     if product.category:
         category = product.category.name
     else:
         category = ""
-    # 礼品规格
+
+      
+    product_dict = { 
+        "uuid":product.uuid,
+        "title":product.title, 
+        "content":product.content,
+        "picture":product.picture,
+        "turns":turns,
+        "videopath" : product.videopath,
+        "isbook" : product.isbook,
+        "producttype" : product.producttype,
+        "cardtype" : product.cardtype,
+        "ready" : product.ready,
+        "recommend" : product.recommend, 
+        "category":category,
+        "producttype" : product.producttype, 
+        "categoryid":product.category.id, 
+
+        "longitude" : product.longitude, 
+        "latitude" : product.latitude, 
+        "area" : product.area, 
+        "address" : product.address, 
+    }
+
+    if date is None:
+        # 获取今天的价格
+        date = datetime.today().date()
+    
+    if detail:
+        # 获取详细的
+        specifications = product.product_specifications.all().values("id","date", "price", "number")
+        product_dict['checkin_earlest_time'] =  product.checkin_earlest_time
+        product_dict['checkout_latest_time'] =  product.checkout_latest_time
+
+        product_dict['unsubscribe_rules'] =  product.unsubscribe_rules
+        product_dict['checkin_notice'] =  product.checkin_notice
+        product_dict['customer_notice'] =  product.customer_notice 
+    else:
+        # 获取指定日期的
+        specifications = list(product.product_specifications.filter(date = date).values("id","date", "price", "number"))
+    for spec in specifications:
+        spec['date'] = time.mktime(spec['date'].timetuple())
+        spec['price'] = str(spec['price'] )
+
+    product_dict['specifications']  = list(specifications)
+
+    if admin:
+        # 管理端获取详细的
+        product_dict['workday_price'] =  product.workday_price
+        product_dict['weekday_price'] =  product.weekday_price
+        product_dict['holiday_price'] =  product.holiday_price
+
+ 
+    return product_dict
+
+
+
+def get_single_product(product): 
+    specifications_lst = []
+    product_creator_dct = {}
+    product_creator_dct['userid'] = product.user.id
+    product_creator_dct['username'] = product.user.username
+    product_id = product.id
+    # 商品内容描述
+    content = product.content
+    # 商品图片
+    picture = product.picture
+    # 商品轮播图
+    if product.turns:
+        turns = product.turns.split(',')
+    else:
+        turns = ''
+    # 商品标题
+    title = product.title
+    # 商品类别
+    if product.category:
+        category = product.category.name
+    else:
+        category = ""
+    # 商品规格
     specifications = product.product_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
     purchase_way = back_sing_goods_way(product.id)
     
     tag_list = [(tag.id, tag.name, tag.label) for tag in product.tags.all()]
-    gift_dct = {
-        "id":gift_id,
+    product_dict = {
+        "id":product_id,
         "uuid":product.uuid,
-        "creator_info":gift_creator_dct,
+        "creator_info":product_creator_dct,
         "content":content,
         "picture":picture,
         "turns":turns,
         "title":title,
         "isbook" : product.isbook,
-        "gifttype" : product.gifttype,
+        "producttype" : product.producttype,
         "cardtype" : product.cardtype,
         "ready" : product.ready,
         "recommend" : product.recommend,
@@ -430,7 +518,7 @@ def get_single_gift(product):
         "purchase_way":purchase_way
     }
 
-    return gift_dct
+    return product_dict
 
 def update_bill_closed(bills):
     # 将订单的状态更新为关闭
@@ -484,15 +572,15 @@ def get_bill_single_dict(bill):
     user_dict['user_id'] = bill.user.id
     user_dict['user_name'] = bill.user.username
     bill_dict["user"] = user_dict
-    # 礼品信息
+    # 商品信息
     try:
         spec = Specifications.objects.get(id=bill.specifications.id)
-        gift_dict = {}
-        gift_dict['id'] = spec.id
-        gift_dict['picture'] = spec.product.picture
-        gift_dict['content'] = spec.content
-        gift_dict['specifications'] = spec.name
-        bill_dict["product"] = gift_dict
+        product_dict = {}
+        product_dict['id'] = spec.id
+        product_dict['picture'] = spec.product.picture
+        product_dict['content'] = spec.content
+        product_dict['specifications'] = spec.name
+        bill_dict["product"] = product_dict
     except Product.DoesNotExist:
         pass
     # # 返回商品的支付方式
