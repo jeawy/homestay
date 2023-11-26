@@ -14,7 +14,7 @@ class CategoryView(View):
     def get(self, request):
         content = {}
         categories = list(Category.objects.filter(level=1, visible =1).values(
-            "name", "icon", "id"
+            "name", "icon", "id", "categorytype"
         ))
         content['msg'] = categories
         content['status'] = SUCCESS

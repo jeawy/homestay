@@ -17,6 +17,9 @@ class Category(models.Model):
     icon = models.CharField(max_length = 1024, null=True)
     # 是否可见
     visible = models.PositiveSmallIntegerField(default= 1)
+
+    # 0 默认表示民宿类型，1表示其他
+    categorytype = models.PositiveSmallIntegerField(default= 0)
      
     def __str__(self):
         return self.name

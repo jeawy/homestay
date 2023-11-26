@@ -28,9 +28,9 @@ class ProductAnonymousView(View):
          
         if 'uuid' in request.GET:
             # 获得单个商品的详细信息
-            giftuuid = request.GET['uuid'] 
+            productuuid = request.GET['uuid'] 
             try:
-                product = Product.objects.get(uuid = giftuuid) 
+                product = Product.objects.get(uuid = productuuid) 
                 result = { 
                     "status":SUCCESS,
                     "msg":get_single_product(product)
@@ -88,16 +88,16 @@ class ProductAnonymousView(View):
             page = 0
             pagenum = settings.PAGE_NUM
         if qfilter is None:
-            gifts = Product.objects.filter(
+            products = Product.objects.filter(
                 **kwargs).order_by("-date")[page*pagenum: (page+1)*pagenum]
             total = Product.objects.filter(**kwargs).count()
         else:
-            gifts = Product.objects.filter(
+            products = Product.objects.filter(
                 Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
             total = Product.objects.filter(Q(**kwargs), qfilter).count()
         result['status'] = SUCCESS
         result['msg'] = {
-            "list": product_infos_lst(gifts),
+            "list": product_infos_lst(products),
             "total": total,
             "sub" : sub
         } 
@@ -126,7 +126,8 @@ class ProductView(APIView):
             leftcount = 0 # 库存预警
             leftcount = Specifications.objects.filter(
                 number__lte = 10, # 少于10个进行库存预警 
-                gift__ready = 1,
+                product__ready = 1,
+                product__producttype = 1
             ).count()
             isbook = Product.objects.filter(isbook = 1).count()
             recommend = Product.objects.filter(recommend = 1).count()
@@ -146,8 +147,9 @@ class ProductView(APIView):
             # 查询库存较低的商品
             result['msg'] = list(Specifications.objects.filter(
                 number__lte = 10, # 少于10个进行库存预警
-                gift__ready = 1, 
-            ).values("gift__uuid", "gift__picture", "gift__title", "number", "name" ))
+                product__ready = 1, 
+                product__producttype = 1
+            ).values("product__uuid", "product__picture", "product__title", "number", "name" ))
             result['status'] = SUCCESS
             return HttpResponse(json.dumps(result), content_type='application/json')  
         
@@ -158,9 +160,9 @@ class ProductView(APIView):
 
         if 'uuid' in request.GET:
             # 获得单个商品的详细信息
-            giftuuid = request.GET['uuid'] 
+            productuuid = request.GET['uuid'] 
             try:
-                product = Product.objects.get(uuid = giftuuid) 
+                product = Product.objects.get(uuid = productuuid) 
                 if product.producttype == 0:
                     msg = get_single_homestay_product(product, detail=True, admin=admin)
                     

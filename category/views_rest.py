@@ -21,11 +21,11 @@ class CategoryRestView(APIView):
     def get(self, request): 
         content = {} 
         categories = list(Category.objects.filter(level=1).values(
-            "id","name", "icon", "visible"
+            "id","name", "icon", "visible", "categorytype"
         ))
         for category in categories:
             category['sub'] = list(Category.objects.filter(parent__id = category['id']).values(
-                                "id","name", "icon", "visible"
+                                "id","name", "icon", "visible", "categorytype"
                             ))
         content['msg'] = categories
         content['status'] = SUCCESS
@@ -75,6 +75,11 @@ class CategoryRestView(APIView):
             visible = 1
             if 'visible' in request.POST:
                 visible = int(request.POST['visible'])
+            
+            categorytype = 0
+            if 'categorytype' in request.POST:
+                categorytype = int(request.POST['categorytype'])
+
             if parentid: 
                 # 创建顶级子类别
                 try:
@@ -84,6 +89,7 @@ class CategoryRestView(APIView):
                          parent=category) 
                     category.icon = icon 
                     category.visible = visible 
+                    category.categorytype = categorytype 
                     category.save()
                     result['id'] = category.id
                     result['status'] = SUCCESS
@@ -96,6 +102,7 @@ class CategoryRestView(APIView):
                 category = Category.objects.create(name=name)
                 category.icon = icon 
                 category.visible = visible 
+                category.categorytype = categorytype 
                 category.save()
                 result['id'] = category.id
                 result['status'] = SUCCESS
@@ -128,6 +135,10 @@ class CategoryRestView(APIView):
                 if 'visible' in data:
                     visible = int(data['visible'])
                     category.visible = visible
+                
+                if 'categorytype' in data:
+                    categorytype = int(data['categorytype'])
+                    category.categorytype = categorytype
                     
                      
                 category.save()
