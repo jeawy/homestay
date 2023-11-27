@@ -38,7 +38,7 @@ class Product(BaseDate):
     # 商品分类
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING,null= True )
 
-    tags = models.ManyToManyField(Tags)
+    tags = models.ManyToManyField(Tags) # 标签
 
     # 是否为预约商品，默认为现货商品，1 为预约商品
     isbook = models.SmallIntegerField(default=0)
@@ -86,7 +86,14 @@ class Product(BaseDate):
     checkin_notice = models.TextField( null= True)
     # 对客要求
     customer_notice = models.TextField( null= True)
-
+    
+    # 特色，特点
+    lighlight = models.CharField(max_length= 100, null= True)
+    # 户型: 两室一厅
+    housetype = models.CharField(max_length= 100, null= True)
+    
+    # 最大允许入住人数
+    maxlivers = models.PositiveSmallIntegerField(default=4)
     class Meta:
         default_permissions = ()
         ordering = ['-date']

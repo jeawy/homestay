@@ -9,10 +9,11 @@ from tags.comm import add
 
 class TagsView(View):
     def get(self, request):
-        tags = Tags.objects.filter()
-        content = {}
-        tags_ls = [(tag.name, tag.label) for tag in tags]
-        add("特惠", "tehui")
-        content['status'] = SUCCESS
-        content['msg'] = tags_ls
-        return HttpResponse(json.dumps(content), content_type="application/json")
+        if 'label' in request.GET:
+            label = request.GET['label']
+            tags = Tags.objects.filter(label = label).values("id", "name", "label")
+           
+            content = {}
+            content['status'] = SUCCESS
+            content['msg'] = list(tags)
+            return HttpResponse(json.dumps(content), content_type="application/json")

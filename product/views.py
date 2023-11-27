@@ -14,7 +14,7 @@ from property import settings
 from property.code import SUCCESS, ERROR 
 from product.models import Product, Specifications, Category 
 import uuid
-from tags.comm import add 
+
 from product.comm import product_infos_lst, specifications_infos_lst,\
 editData, get_single_product, addSpecs, setHomestayPrice, homestay_infos_lst,\
 get_single_homestay_product

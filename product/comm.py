@@ -12,6 +12,7 @@ from product.models import PurchaseWay,Bill
 from common.fun import timeStamp
 from django.conf import settings
 from common.fileupload import FileUpload
+from tags.comm import add 
 from common.holiday import check_holiday, get_holidays
 from product.purchase_way_views import sing_goods_ways,back_sing_goods_way
 
@@ -77,6 +78,7 @@ def editData(product, data, request):
         except ValueError:
             pass
     
+      
     if 'area' in data:
         area = data['area'].strip()
         try:  
@@ -152,6 +154,30 @@ def editData(product, data, request):
                 os.remove(imgpath)
         product.videopath = filepath
     
+    if 'maxlivers' in data:
+        maxlivers = data['maxlivers'].strip()
+        try:  
+            product.maxlivers = int(maxlivers) 
+        except ValueError:
+            pass
+
+    if 'lighlight' in data:
+        lighlight = data['lighlight'].strip()
+        product.lighlight = lighlight 
+
+    if 'housetype' in data:
+        housetype = data['housetype'].strip()
+        product.housetype = housetype
+    
+    if 'tags' in data: # 添加标签
+        tags = data['tags'].split(",")
+        label = "product"
+        if product.tags:
+            product.tags.all().delete()
+
+        for tag in tags:
+            if tag:
+                product.tags.add(add(tag, label))
      
     return product
 
@@ -433,6 +459,11 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         "latitude" : product.latitude, 
         "area" : product.area, 
         "address" : product.address, 
+
+        "lighlight" : product.lighlight, 
+        "housetype" : product.housetype, 
+        "maxlivers" : product.maxlivers,
+        "tags" : list(product.tags.all().values("id", "name")),
     }
 
     if date is None:
