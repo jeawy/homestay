@@ -23,34 +23,24 @@ class ToolsView(View):
         if 'year' in request.GET and 'month' in request.GET:
             # 获取当前月份的日期，以及节假日信息
             """
-            返回格式：
-            {
-               0: [ # 周一
+            返回格式： 
+                 [ 
                    {
+                        "weekday" : 0, # 周日
+                        "lastmonth":1, # 1 表示上个月的日期， 0 表示本月的日期
+                        "day":1727625600, # 日期时间戳
+                        "price":null, # 当前日期标注的价格
+                        "holiday": "" #  是否是节假日，节假日会显示节假日名称，如国庆节
+                   }, 
+                   {
+                        "weekday" : 1, # 周一
                         "lastmonth":1, # 1 表示上个月的日期， 0 表示本月的日期
                         "day":1727625600, # 日期时间戳
                         "price":null, # 当前日期标注的价格
                         "holiday": "" #  是否是节假日，节假日会显示节假日名称，如国庆节
                    }
-               ]
-               1: [ # 周二
-                   {
-                        "lastmonth":1, # 1 表示上个月的日期， 0 表示本月的日期
-                        "day":1727625600, # 日期时间戳
-                        "price":null, # 当前日期标注的价格
-                        "holiday": "" #  是否是节假日，节假日会显示节假日名称，如国庆节
-                   }
-               ]
-            }
+               ] 
             """
-            data = {}
-            year = request.GET['year'].strip()
-            month = request.GET['month'].strip()
-            startday = datetime.strptime(year+"/" +month + "/" + "01", settings.DATEFORMAT)
-            firstweekday = startday.weekday()
-
-            holidays = get_holidays() # 获取节假日信息
-            
             specs = []
             if 'productuuid' in  request.GET:
                 # 查询民宿在某一天的价格
@@ -58,8 +48,16 @@ class ToolsView(View):
                 
                 specs = Specifications.objects.filter(product__uuid = productuuid).\
                     values("id", "date", "price").order_by("date") 
+                
 
+            data = []
+            year = request.GET['year'].strip()
+            month = request.GET['month'].strip()
+            startday = datetime.strptime(year+"/" +month + "/" + "01", settings.DATEFORMAT)
             
+            firstweekday = startday.weekday() 
+            holidays = get_holidays() # 获取节假日信息
+             
             if firstweekday > 0:
                 lastmonth = startday - timedelta(days = 1)  # 上个月最后一天 
                 for i in range(firstweekday):
@@ -68,6 +66,7 @@ class ToolsView(View):
                     weekday = lastday.weekday()
                      
                     item = {
+                        "weekday":lastday.weekday(),
                         "lastmonth" : 1, #上个月数据
                         "day" : time.mktime (lastday.timetuple()),
                         "price" : None
@@ -79,11 +78,7 @@ class ToolsView(View):
                             item['price'] = float(spec['price'])
                             break
 
-                     
-                    if weekday in data.keys():
-                        data[weekday].append(item)
-                    else:
-                        data[weekday] = [item]
+                    data.append(item)
 
 
             lastday = calendar.monthrange(int(year), int(month))[1]
@@ -92,6 +87,7 @@ class ToolsView(View):
                 daydate = day.date()
                 weekday = daydate.weekday()
                 item = {
+                    "weekday":daydate.weekday(),
                     "lastmonth" : 0, #本月数据
                     "day" : time.mktime(daydate.timetuple()),
                     "price" : None
@@ -103,11 +99,8 @@ class ToolsView(View):
                         item['price'] = float(spec['price'])
                         break
                     
-                if weekday in data.keys():
-                    data[weekday].append(item)
-                else:
-                    data[weekday] = [item] 
-            data = dict(sorted(data.items()))  
+                data.append(item)
+            data =  sorted(data, key=lambda d:d['day']) #dict(sorted(data.items()))  
             result['msg'] = data
             result['status'] = SUCCESS
         else:
