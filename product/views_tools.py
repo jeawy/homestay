@@ -110,7 +110,23 @@ class ToolsView(View):
             data = dict(sorted(data.items()))  
             result['msg'] = data
             result['status'] = SUCCESS
+        else:
+            # 获取全部节假日
+            holidays = get_holidays() # 获取节假日信息
+            msg = []
+            for holiday in holidays:
+                
+                for day in holiday['days']:
+                    item = {
+                        "holidayname" : holiday['holidayname'],
+                        "day": time.mktime(day.timetuple())
+                    }
+                    msg.append(item)
+            
+            result['msg'] = msg
+            result['status'] = SUCCESS
+
  
-            return HttpResponse(json.dumps(result), content_type="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
 
          
