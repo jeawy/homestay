@@ -17,7 +17,7 @@ import uuid
 
 from product.comm import product_infos_lst, specifications_infos_lst,\
 editData, get_single_product, addSpecs, setHomestayPrice, homestay_infos_lst,\
-get_single_homestay_product
+get_single_homestay_product  
 logger = getLogger(True, 'product', False)
  
 
@@ -31,10 +31,14 @@ class ProductAnonymousView(View):
             productuuid = request.GET['uuid'] 
             try:
                 product = Product.objects.get(uuid = productuuid) 
+                if product.producttype == 0:
+                    msg = get_single_homestay_product(product, detail=True ) 
+                else:
+                    msg = get_single_product(product)
                 result = { 
                     "status":SUCCESS,
-                    "msg":get_single_product(product)
-                  }
+                    "msg":msg
+                }
             except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,
@@ -63,11 +67,17 @@ class ProductAnonymousView(View):
         else:
             kwargs['ready'] = 1
         
+        date = None
+        if 'date' in request.GET:
+            date = request.GET['date'].strip()
+            date = datetime.strptime(date, settings.DATEFORMAT)
+
+
+        producttype = 0  
         if 'producttype' in request.GET:
             producttype = request.GET['producttype'].strip()
-            kwargs['producttype'] = producttype
-
-        
+        kwargs['producttype'] = producttype
+          
         if 'latest' in request.GET:
             # 获取最新产品
             now =  datetime.today()
@@ -87,20 +97,20 @@ class ProductAnonymousView(View):
         else:
             page = 0
             pagenum = settings.PAGE_NUM
+
         if qfilter is None:
             products = Product.objects.filter(
-                **kwargs).order_by("-date")[page*pagenum: (page+1)*pagenum]
-            total = Product.objects.filter(**kwargs).count()
+                **kwargs).order_by("-date")[page*pagenum: (page+1)*pagenum] 
         else:
             products = Product.objects.filter(
                 Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
-            total = Product.objects.filter(Q(**kwargs), qfilter).count()
+            
         result['status'] = SUCCESS
-        result['msg'] = {
-            "list": product_infos_lst(products),
-            "total": total,
-            "sub" : sub
-        } 
+        if producttype == 0:
+            result['msg'] = homestay_infos_lst(products, date=date)
+        else:
+            result['msg'] = product_infos_lst(products)
+            
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -237,7 +247,7 @@ class ProductView(APIView):
                 result['status'] = SUCCESS
                 result['msg'] = '商品分类不存在'
                 return HttpResponse(json.dumps(result), content_type="application/json")
-
+ 
         if 'mine' in request.GET:
             kwargs['user'] = user
         

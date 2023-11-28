@@ -7,7 +7,7 @@ import traceback
 import os
 from common.logutils import getLogger
 from property.code import SUCCESS, ERROR
-from product.models import Product,Specifications
+from product.models import Product,Specifications, ProductImages
 from product.models import PurchaseWay,Bill
 from common.fun import timeStamp
 from django.conf import settings
@@ -416,7 +416,7 @@ def homestay_infos_lst(products, date=None,  detail=False, admin = False):
     product_infos = []
     
     for product in products: 
-        product_infos.append(get_single_homestay_product(product, date ,  detail , admin ))
+        product_infos.append(get_single_homestay_product(product,  date ,  detail , admin ))
     return product_infos
 
 
@@ -424,21 +424,13 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
     # admin = True,返回管理信息，= False，只返回客户所需看到的信息
     # detail 指的是详细页面中需要的数据
     # date 指的是date这一天的价格，如果为None则默认今天
-    
- 
+     
     # 商品轮播图
     if product.turns:
         turns = product.turns.split(',')
     else:
         turns = ''
      
-    # 商品类别
-    if product.category:
-        category = product.category.name
-    else:
-        category = ""
-
-      
     product_dict = { 
         "uuid":product.uuid,
         "title":product.title, 
@@ -451,7 +443,6 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         "cardtype" : product.cardtype,
         "ready" : product.ready,
         "recommend" : product.recommend, 
-        "category":category,
         "producttype" : product.producttype, 
         "categoryid":product.category.id, 
 
@@ -479,6 +470,12 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         product_dict['unsubscribe_rules'] =  product.unsubscribe_rules
         product_dict['checkin_notice'] =  product.checkin_notice
         product_dict['customer_notice'] =  product.customer_notice 
+
+        # 每个图库，获取最前面的一张图，其他图通过图库接口获取 
+        imgs = list(ProductImages.objects.filter(imgtype__product = product).\
+            values("id", "img", "imgtype__id", "imgtype__name").\
+                distinct("imgtype__id").order_by("imgtype__id", "id")) 
+        product_dict['imgs'] =  imgs
     else:
         # 获取指定日期的
         specifications = list(product.product_specifications.filter(date = date).values("id","date", "price", "number"))
@@ -656,3 +653,4 @@ def check_express_company(express_company):
         result['status'] = ERROR
         result['msg'] = 'name is empty.'
     return result
+
