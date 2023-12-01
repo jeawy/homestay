@@ -12,7 +12,7 @@ from product.models import PurchaseWay,Bill
 from common.fun import timeStamp
 from django.conf import settings
 from common.fileupload import FileUpload
-from tags.comm import add 
+
 from common.holiday import check_holiday, get_holidays
 from product.purchase_way_views import sing_goods_ways,back_sing_goods_way
 
@@ -169,16 +169,7 @@ def editData(product, data, request):
         housetype = data['housetype'].strip()
         product.housetype = housetype
     
-    if 'tags' in data: # 添加标签
-        tags = data['tags'].split(",")
-        label = "product"
-        if product.tags:
-            product.tags.all().delete()
-
-        for tag in tags:
-            if tag:
-                product.tags.add(add(tag, label))
-     
+    
     return product
 
 def addSpecs(product, data):

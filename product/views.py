@@ -14,7 +14,7 @@ from property import settings
 from property.code import SUCCESS, ERROR 
 from product.models import Product, Specifications, Category 
 import uuid
-
+from tags.comm import add 
 from product.comm import product_infos_lst, specifications_infos_lst,\
 editData, get_single_product, addSpecs, setHomestayPrice, homestay_infos_lst,\
 get_single_homestay_product  
@@ -315,17 +315,33 @@ class ProductView(APIView):
                 result['status'] = ERROR
                 result['msg'] = "未找到相关类别"
                 return HttpResponse(json.dumps(result), content_type="application/json")
-                 
+            
             title = data['title']
             content = data['content']
               
             product = editData(product, data, request)
-                  
+
             product.user = user
             product.content = content
             product.title = title 
             product.uuid=uuid.uuid4()
             product.save()
+
+
+            if 'tags' in data: # 添加标签
+                tags = data['tags'].split(",")
+                producttype = 0
+                if 'producttype' in data:
+                    producttype = int( data['producttype'].strip())
+                 
+                if producttype == 1:
+                    label = "product"
+                else:
+                    label = "homestay"
+                for tag in tags:
+                    if tag:
+                        product.tags.add(add(tag, label))
+             
              
             addSpecs(product, data)
             if 'pricemode' in data:
@@ -376,7 +392,21 @@ class ProductView(APIView):
  
             product = editData(product, data, request)
             product.save()
-                   
+
+            if 'tags' in data: # 添加标签
+                tags = data['tags'].split(",")
+                if product.producttype==1:
+                    label = "product"
+                else:
+                    label = "homestay"
+                
+                if product.tags:
+                    product.tags.all().delete()
+
+                for tag in tags:
+                    if tag:
+                        product.tags.add(add(tag, label))
+            
             addSpecs(product, data) 
             if 'pricemode' in data:
                 # 价格覆盖模式：0 仅覆盖日历上未设定价格的日期
