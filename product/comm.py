@@ -477,6 +477,7 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
             values("id", "img", "imgtype__id", "imgtype__name").\
                 distinct("imgtype__id").order_by("imgtype__id", "id")) 
         product_dict['imgs'] =  imgs
+        product_dict['count_allpics']  = ProductImages.objects.filter(imgtype__product = product).count()
     else:
         # 获取指定日期的
         specifications = list(product.product_specifications.filter(date = date).values("id","date", "price", "number"))
@@ -490,7 +491,7 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         spec['price'] = float(spec['price'] )
     
     product_dict['specifications']  = list(specifications)
-
+    
     if admin:
         # 管理端获取详细的
         product_dict['workday_price'] =  product.workday_price

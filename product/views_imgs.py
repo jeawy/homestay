@@ -2,7 +2,7 @@
 import json
 import os
 import pdb
-import traceback
+from itertools import groupby
 from django.db.models import Q
 from common.logutils import getLogger
 from datetime import datetime, timedelta
@@ -26,14 +26,25 @@ class ImgAnonymousView(View):
         result = {"status": ERROR}
          
         if 'uuid' in request.GET:
-            # 获得单个民宿的详细信息
+            # 获得单个民宿的图库信息
             productuuid = request.GET['uuid'] 
             try:
-                product = Product.objects.get(uuid = productuuid) 
+                product = Product.objects.get(uuid = productuuid, ready=1) 
+                imgs = list(ProductImages.objects.filter(imgtype__product = product).\
+                        values("id", "img", "imgtype__id", "imgtype__name").\
+                            order_by("imgtype__id", "id"))  
+                imgs.sort(key=lambda x:x['imgtype__id'])
+                 
+                resultimgs = []
+                for k, v in groupby(imgs, key=lambda x:x['imgtype__name']): 
+                    resultimgs.append({
+                        "name" : k,
+                        "list" : list(v)
+                    })
                 result = { 
                     "status":SUCCESS,
-                    "msg":get_single_product(product)
-                  }
+                    "msg":resultimgs
+                }
             except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,
