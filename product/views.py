@@ -25,14 +25,22 @@ class ProductAnonymousView(View):
     def get(self, request):
         # 查看 
         result = {"status": ERROR}
-         
+
+        date = None
+        if 'date' in request.GET:
+            date = request.GET['date'].strip()
+            try:
+                date = datetime.strptime(date, settings.DATEFORMAT).date()
+            except ValueError:
+                print("日期格式化错误.")
+
         if 'uuid' in request.GET:
             # 获得单个商品的详细信息
             productuuid = request.GET['uuid'] 
             try:
                 product = Product.objects.get(uuid = productuuid) 
                 if product.producttype == 0:
-                    msg = get_single_homestay_product(product, detail=True ) 
+                    msg = get_single_homestay_product(product, date=date, detail=True ) 
                 else:
                     msg = get_single_product(product)
                 result = { 
@@ -66,12 +74,7 @@ class ProductAnonymousView(View):
             kwargs['recommend'] = 1 # 获取推荐产品
         else:
             kwargs['ready'] = 1
-        
-        date = None
-        if 'date' in request.GET:
-            date = request.GET['date'].strip()
-            date = datetime.strptime(date, settings.DATEFORMAT)
-
+         
 
         producttype = 0  
         if 'producttype' in request.GET:

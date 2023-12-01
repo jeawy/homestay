@@ -460,6 +460,7 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
     if date is None:
         # 获取今天的价格
         date = datetime.today().date()
+     
     
     if detail:
         # 获取详细的
@@ -479,10 +480,15 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
     else:
         # 获取指定日期的
         specifications = list(product.product_specifications.filter(date = date).values("id","date", "price", "number"))
-    for spec in specifications:
+    
+    for spec in specifications: 
+        if date == spec['date']:
+            # 指定日期的价格 
+            product_dict['price'] =  float(spec['price']  )
         spec['date'] = time.mktime(spec['date'].timetuple())
-        spec['price'] = str(spec['price'] )
-
+        
+        spec['price'] = float(spec['price'] )
+    
     product_dict['specifications']  = list(specifications)
 
     if admin:
