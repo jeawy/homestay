@@ -360,11 +360,11 @@ def specifications_infos_lst(specs):
         spec_dct = {}
         id = spec.id
         # 商品价格
-        price = str(spec.price)
+        price = float(spec.price)
         # 商品数量
         num = spec.number
         # 虚拟币数量
-        coin = str(spec.coin)
+        coin = float(spec.coin)
         # 商品名称
         name = spec.name
         # 商品规格名称
@@ -393,12 +393,12 @@ def specifications_infos_lst(specs):
         specifications_infos.append(spec_dct)
     return specifications_infos
 
-def product_infos_lst(products):
+def product_infos_lst(products, detail = False):
     # 获取商品详情
     product_infos = []
     
     for product in products: 
-        product_infos.append(get_single_product(product))
+        product_infos.append(get_single_product(product, detail = False))
     return product_infos
 
 
@@ -494,14 +494,15 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
 
 
 
-def get_single_product(product): 
+def get_single_product(product, detail = False): 
+    # detail == false代表只获取列表中需要的简要信息
+
     specifications_lst = []
     product_creator_dct = {}
     product_creator_dct['userid'] = product.user.id
     product_creator_dct['username'] = product.user.username
     product_id = product.id
-    # 商品内容描述
-    content = product.content
+    
     # 商品图片
     picture = product.picture
     # 商品轮播图
@@ -520,13 +521,11 @@ def get_single_product(product):
     specifications = product.product_specifications.all()
     specifications_lst = specifications_infos_lst(specifications)
     purchase_way = back_sing_goods_way(product.id)
-    
-    tag_list = [(tag.id, tag.name, tag.label) for tag in product.tags.all()]
+ 
     product_dict = {
         "id":product_id,
         "uuid":product.uuid,
-        "creator_info":product_creator_dct,
-        "content":content,
+        "creator_info":product_creator_dct, 
         "picture":picture,
         "turns":turns,
         "title":title,
@@ -534,15 +533,24 @@ def get_single_product(product):
         "producttype" : product.producttype,
         "cardtype" : product.cardtype,
         "ready" : product.ready,
-        "recommend" : product.recommend,
-        "tags" : tag_list,
+        "recommend" : product.recommend, 
         "category":category,
         "producttype" : product.producttype,
         "videopath" : product.videopath,
         "categoryid":product.category.id,
         "specifications":specifications_lst,
-        "purchase_way":purchase_way
+        "purchase_way":purchase_way,
+        "lighlight" : product.lighlight,  
+        "tags" : list(product.tags.all().values("id", "name")),
     }
+    if detail:
+        # 获取详细信息 
+        product_dict['content'] =  product.content
+        imgs = list(ProductImages.objects.filter(imgtype__product = product).\
+            values("id", "img", "imgtype__id", "imgtype__name").\
+                distinct("imgtype__id").order_by("imgtype__id", "id")) 
+        product_dict['imgs'] =  imgs
+        product_dict['count_allpics']  = ProductImages.objects.filter(imgtype__product = product).count()
 
     return product_dict
 

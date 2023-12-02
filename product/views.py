@@ -42,7 +42,7 @@ class ProductAnonymousView(View):
                 if product.producttype == 0:
                     msg = get_single_homestay_product(product, date=date, detail=True ) 
                 else:
-                    msg = get_single_product(product)
+                    msg = get_single_product(product, detail=True)
                 result = { 
                     "status":SUCCESS,
                     "msg":msg
@@ -112,7 +112,7 @@ class ProductAnonymousView(View):
         if producttype == 0:
             result['msg'] = homestay_infos_lst(products, date=date)
         else:
-            result['msg'] = product_infos_lst(products)
+            result['msg'] = product_infos_lst(products, detail = False)
             
         return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -180,7 +180,7 @@ class ProductView(APIView):
                     msg = get_single_homestay_product(product, detail=True, admin=admin)
                     
                 else:
-                    msg = get_single_product(product)
+                    msg = get_single_product(product, detail= True)
                 result = { 
                     "status":SUCCESS,
                     "msg":msg
@@ -277,7 +277,7 @@ class ProductView(APIView):
             result_list = homestay_infos_lst(products, admin=admin)
         else:
             # 普通商品
-            result_list = product_infos_lst(products)
+            result_list = product_infos_lst(products, detail= False)
 
         result['status'] = SUCCESS
         result['msg'] = {
