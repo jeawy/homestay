@@ -14,26 +14,26 @@ class CartView(APIView):
         result = { } 
         user = request.user
         # 价格小于或者等于0的商品不会进入购物车，防止积分加入购物车
-        gifts = list(Cart.objects.filter(user = user,spec__price__gt=0 ).values(
-            "spec__gift__picture",
-            "spec__gift__uuid",
+        products = list(Cart.objects.filter(user = user,spec__price__gt=0 ).values(
+            "spec__product__picture",
+            "spec__product__uuid",
             "spec__id",
             "spec__name",
-            "spec__gift__title",
+            "spec__product__title",
             "spec__price",
             "spec__coin",
             "spec__id",
             "uuid",
             "number" 
         ) )
-        for product in gifts:
+        for product in products:
             if product['spec__price'] is not None:
                 product['spec__price'] = float(product['spec__price'])
             else:
                 product['spec__price'] = 0
         result = { 
             "status":SUCCESS,
-            "msg": gifts
+            "msg": products
             }
          
         return HttpResponse(json.dumps(result), content_type="application/json")
