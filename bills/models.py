@@ -33,6 +33,12 @@ class Bills(PayBase):
     UNUSUAL = -1  # 异常订单，例如库存不足等
     status = models.SmallIntegerField(default = UNUSUAL)
     
+    
+    # 订单类型
+    HOMESTAY = 0 
+    OTHER = 1 
+    billtype = models.PositiveSmallIntegerField(default = HOMESTAY)
+    
     # 备注信息
     remark = models.CharField(max_length= 256, null = True)
 

@@ -298,7 +298,7 @@ class OrderView(APIView):
             addressid = data['addressid'] 
             if len(specs) > 0: 
                 address = None
-                if int(addressid) == -1:
+                if int(addressid) == -1: # 或者不需要地址，如民宿
                     # 自提
                     delivery_way = 1
                 else: 
@@ -329,10 +329,20 @@ class OrderView(APIView):
                         # 积分兑换 
                         bill.ordertype = ordertype
                 
+                billtype = bill.HOMESTAY
+                if 'billtype' in data:
+                    billtype = int(data['billtype']) 
+                    bill.billtype = billtype
+ 
                 if 'remark' in data:
                     remark = data['remark'] 
                     bill.remark = remark
 
+                
+                if 'phone' in data:
+                    phone = data['phone'] 
+                    bill.receiver_phone = phone
+                    
                 bill.save() 
                 for spec in specs:
                     number = spec['number']
@@ -349,9 +359,16 @@ class OrderView(APIView):
                             price = spec_instance.coin
                         else:
                             price = spec_instance.price
+                        
+                        if billtype == bill.HOMESTAY:
+                            # 
+                            specname = datetime.strftime(spec_instance.date, settings.DATEFORMAT)
+                        else:
+                            specname = spec_instance.name
+
                         BillSpec.objects.create(
                             number = number,
-                            name = spec_instance.name,
+                            name = specname,
                             price = price,
                             title = spec_instance.product.title,
                             picture = spec_instance.product.picture,
@@ -361,9 +378,9 @@ class OrderView(APIView):
                             money = number * price 
                         ) 
                         if subject == "":
-                            subject =  spec_instance.name
+                            subject =  specname
                         else:
-                            subject += ","+spec_instance.name
+                            subject += ","+ specname
                 bill.subject = subject
                 
                 bill.save()
