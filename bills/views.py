@@ -373,7 +373,7 @@ class OrderView(APIView):
                 redisconn = myredis.getconn()
                 # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
                 redisconn.lpush("bills", bill.uuid+",1") # 发布到队列中
-                print(myredis.publish("consumer", "bills")) # 通知订阅者进行消费，更新库存
+                print(myredis.publish("consumer", "home_stay_bills")) # 通知订阅者进行消费，更新库存
 
                 result['status'] = SUCCESS
                 result['msg'] = str(bill.uuid)
@@ -467,7 +467,7 @@ class OrderView(APIView):
                         redisconn = myredis.getconn()
                         # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
                         redisconn.lpush("bills", bill.uuid+",0") # 发布到队列中
-                        print(myredis.publish("consumer", "bills")) # 通知订阅者进行消费，更新库存
+                        print(myredis.publish("consumer", "home_stay_bills")) # 通知订阅者进行消费，更新库存
  
                     bill.owner_delete = 1
                     bill.save()

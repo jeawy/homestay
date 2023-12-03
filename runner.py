@@ -8,7 +8,7 @@ DEBUG = True
 if DEBUG:
     HOST = 'http://127.0.0.1:8000/api'
 else:
-    HOST = 'https://property.chidict.com/api' 
+    HOST = 'https://shopdemo.chidict.com/api' 
 
 def initDb():
     """
