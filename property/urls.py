@@ -69,6 +69,8 @@ urlpatterns = [
     url(r'^api/wx/', include('wx.urls', namespace="wx")),    
     url(r'^api/product/', include('product.urls', namespace="product")),  
     url(r'^api/bills/', include('bills.urls', namespace="bills")),
-    url(r'^api/card/', include('card.urls', namespace="card")),     
+    url(r'^api/card/', include('card.urls', namespace="card")),
+    url(r'^api/coupon/', include('coupon.urls', namespace="coupon")),     
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
