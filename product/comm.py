@@ -364,7 +364,10 @@ def specifications_infos_lst(specs):
         # 商品数量
         num = spec.number
         # 虚拟币数量
-        coin = float(spec.coin)
+        if spec.coin:
+            coin = float(spec.coin)
+        else:
+            coin = 0
         # 商品名称
         name = spec.name
         # 商品规格名称

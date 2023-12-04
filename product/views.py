@@ -109,7 +109,7 @@ class ProductAnonymousView(View):
                 Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
             
         result['status'] = SUCCESS
-        if producttype == 0:
+        if int(producttype) == 0:
             result['msg'] = homestay_infos_lst(products, date=date)
         else:
             result['msg'] = product_infos_lst(products, detail = False)
