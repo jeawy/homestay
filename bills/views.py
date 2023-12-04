@@ -6,7 +6,7 @@ import pdb
 import os
 import uuid
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import SU, relativedelta
 from django.http import HttpResponse
 from django.conf import settings
@@ -31,6 +31,34 @@ from common.redisconf import RedisSubscri
 from webcoin.comm import reduce_coin
 from common.express import get_express
 
+
+
+class CancelOrderView(View):
+    # 取消超时订单
+    def post(self,request):
+        # 删除礼品
+        result = {}
+        datenow = datetime.today() - timedelta(minutes= 30)
+        bills = Bills.objects.filter(status = Bills.NON_PAYMENT, date__lte = datenow)
+         
+       
+        for bill in bills:
+            # 删除礼品时删除磁盘中对应的图片和轮播图文件
+            if bill.status == bill.NON_PAYMENT: 
+                # 还要进行退库
+                # 存入redis队列
+                myredis = RedisSubscri()
+                redisconn = myredis.getconn()
+                # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
+                redisconn.lpush("bills", bill.uuid+",0") # 发布到队列中
+                print(myredis.publish("consumer", "home_stay_bills")) # 通知订阅者进行消费，更新库存
+
+            bill.owner_delete = 1
+            bill.save()
+                 
+        result['status'] = SUCCESS
+        result['msg'] = '删除成功' 
+        return HttpResponse(json.dumps(result), content_type="application/json")
 
  
 class OrderConsumerView(View):

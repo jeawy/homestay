@@ -4,7 +4,7 @@ import pdb
 import json
 
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     HOST = 'http://127.0.0.1:8000/api'
 else:
@@ -54,36 +54,33 @@ def createRecord():
     定时创建登记薄功能
     未完成。
     """
-    pass
+    result = requests.post(url=HOST + '/xxxx/xxxxx/',
+    data={'analysis':''},
+    headers={'Content-Type':'application/x-www-form-urlencoded'}) 
+    print(result)
 
-def sendMsg():
+def cancelBill():
     """
-    物业费短信催缴，批量发送短信
-    每12个小时跑一次
+    超时取消订单
     """
-    result = requests.post(url=HOST + '/msg/anonymous/',
-    data={'send':''},
+    result = requests.post(url=HOST + '/bills/cancel/',
+    data={ },
     headers={'Content-Type':'application/x-www-form-urlencoded'}) 
     print(result)
 
 if __name__ == "__main__":
-    counter = 0
-    updateMoney()
-    """
+    counter = 0 
     while True: 
-        send()
-        update_frame_video()
-        time.sleep(60 * 5) # 5分钟刷新一次
+        cancelBill() 
+        time.sleep(60 * 1) # 5分钟刷新一次
         counter += 1
         if counter == 12 * 12: # 12小时更新一次批量发送短信
-            sendMsg()
+            pass
 
         if counter == 12 * 24 : # 一天更新一次任务状态
-            update_task_status() 
-            dept_kpi()  
+            pass
             counter = 0
-        if counter 
-    """
+       
         
 
         
