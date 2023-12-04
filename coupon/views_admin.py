@@ -203,6 +203,10 @@ class CouponAdminView(APIView):
                 extras = data['extras']
                 coupon.extras = extras
             
+            if 'status' in data:
+                status = data['status']
+                coupon.status = status
+            
             coupon.save()
             result['status'] = SUCCESS
             result['msg'] = "创建成功"
@@ -229,15 +233,30 @@ class CouponAdminView(APIView):
                         result['msg'] = "已有购买用户，不支持自己修改"
                     else:
                         # 开始修改
-                        if 'start' in data:
-                            start = data['start'].strip()
-                            start = datetime.strptime(start, settings.DATEFORMAT)
-                            coupon.start = start
+                        if 'time' in data:
+                            timedata = data['time']
+                            timedata = timedata.split(",")
+                            if len(timedata) == 2:
+                                print(timedata)
+                                start = time.localtime(int(timedata[0])/1000)
+                                start = time.strftime("%Y/%m/%d", start)
+                                end = time.localtime(int(timedata[1])/1000)
+                                end = time.strftime("%Y/%m/%d", end)
+                                
+                                start = datetime.strptime(start, settings.DATEFORMAT)
+                                end = datetime.strptime(end, settings.DATEFORMAT)
 
-                        if 'end' in data:
-                            end = data['end'].strip() 
-                            end = datetime.strptime(end, settings.DATEFORMAT)
-                            coupon.end = end
+                                if end < start:
+                                    result['msg'] = "截止日期不能小于起始日期"
+                                    return HttpResponse(json.dumps(result), content_type="application/json")
+                                coupon.start = start
+                                coupon.end = end
+                            else:
+                                result['msg'] = "有效期格式错误"
+                                return HttpResponse(json.dumps(result), content_type="application/json")
+                        else:
+                            result['msg'] = "缺少有效期"
+                            return HttpResponse(json.dumps(result), content_type="application/json")
 
                         if coupon.end < coupon.start:
                             result['msg'] = "截止日期不能小于起始日期"
@@ -250,6 +269,11 @@ class CouponAdminView(APIView):
                         if 'limit' in data:
                             limit = data['limit']
                             coupon.limit = limit
+                        
+                        if 'status' in data:
+                            status = data['status']
+                            coupon.status = status
+
 
                         if len(name) > 56:
                             result['msg'] = "标题不能超过28个字"
