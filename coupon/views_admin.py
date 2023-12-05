@@ -356,6 +356,4 @@ class CouponAdminView(APIView):
         else:
             result['msg'] = "缺少必要参数"
         return HttpResponse(json.dumps(result), content_type="application/json")
-    
-class CoupinAnonynousView(View):
-    pass
+ 

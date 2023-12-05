@@ -21,7 +21,7 @@ class Coupon(BaseDate):
     DISCOUNT = 0  # 折扣券：如8折
     REDUCTION = 1 # 满减券：如满100减5元
     coupontype = models.PositiveSmallIntegerField(default = REDUCTION)
-    # 购买用户
+    # 购买用户/领取优惠券的用户
     buyers = models.ManyToManyField(User, related_name = "buyers")
 
     # 有效期的起止日期
