@@ -6,7 +6,7 @@ from content.views import   CategoryView, ProductView,  ProductAnonymousView
 app_name = "content"
 urlpatterns = [
     # 管理
-    url(r'^products/$', csrf_exempt(ProductView.as_view()), name='product'),
+    url(r'^contents/$', csrf_exempt(ProductView.as_view()), name='product'),
     url(r'^anonymous/$', csrf_exempt(ProductAnonymousView.as_view()), name='anonymous'),
     
  
