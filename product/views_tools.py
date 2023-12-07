@@ -76,6 +76,7 @@ class ToolsView(View):
                     for spec in specs:  
                         if lastday == spec['date']: 
                             item['price'] = float(spec['price'])
+                            item['id'] =  spec['id'] 
                             break
 
                     data.append(item)
@@ -97,6 +98,7 @@ class ToolsView(View):
                 for spec in specs: 
                     if daydate == spec['date']: 
                         item['price'] = float(spec['price'])
+                        item['id'] =  spec['id'] 
                         break
                     
                 data.append(item)

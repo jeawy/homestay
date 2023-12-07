@@ -125,8 +125,10 @@ class OrderConsumerView(View):
                         logger.debug("billno:"+str(bill.billno)+"执行退库操作")  
                         for spec in specs:
                             # 减库存
-                            spec.spec.number = spec.spec.number + spec.number  
-                            spec.spec.save()
+                            if spec.spec is not None:
+                                # 规格已经删除，无需退库
+                                spec.spec.number = spec.spec.number + spec.number  
+                                spec.spec.save()
                         if bill.status in [0, 6, -1]: # 无效订单，可以删除
                             bill.delete() # 退库后删除订单
                         
