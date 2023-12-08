@@ -17,11 +17,11 @@ class CategoryView(View):
         if 'categoryid' in request.GET:
             categoryid = request.GET['categoryid']
             categories = list(Category.objects.filter(parent__id= categoryid, visible =1).values(
-                "name", "icon", "id", "categorytype"
+                "name", "icon", "id", "categorytype", "sort"
             ))
         else: 
             categories = list(Category.objects.filter(level=1, visible =1).values(
-                "name", "icon", "id", "categorytype"
+                "name", "icon", "id", "categorytype", "sort"
             ))
         content['msg'] = categories
         content['status'] = SUCCESS

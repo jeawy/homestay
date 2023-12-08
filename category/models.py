@@ -21,9 +21,14 @@ class Category(models.Model):
     # 0 默认表示民宿类型，1表示其他
     categorytype = models.PositiveSmallIntegerField(default= 0)
      
+    
+    # 排序
+    sort = models.PositiveSmallIntegerField(default= 1)
+
     def __str__(self):
         return self.name
     
     class Meta:
         default_permissions = () 
+        ordering = ["sort"]
 

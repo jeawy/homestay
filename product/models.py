@@ -36,7 +36,7 @@ class Product(BaseDate):
     producttype = models.PositiveSmallIntegerField(default= 0)
     
     # 商品分类
-    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING,null= True )
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL,null= True )
 
     tags = models.ManyToManyField(Tags) # 标签
 

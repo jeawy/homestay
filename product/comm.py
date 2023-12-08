@@ -437,8 +437,7 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         "cardtype" : product.cardtype,
         "ready" : product.ready,
         "recommend" : product.recommend, 
-        "producttype" : product.producttype, 
-        "categoryid":product.category.id, 
+        "producttype" : product.producttype,  
 
         "longitude" : product.longitude, 
         "latitude" : product.latitude, 
@@ -450,7 +449,12 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         "maxlivers" : product.maxlivers,
         "tags" : list(product.tags.all().values("id", "name")),
     }
-
+    
+    if product.category:
+        product_dict['categoryid'] = product.category.id
+    else:
+        product_dict['categoryid'] =  ""
+        
     if date is None:
         # 获取今天的价格
         date = datetime.today().date()
@@ -539,13 +543,19 @@ def get_single_product(product, detail = False):
         "recommend" : product.recommend, 
         "category":category,
         "producttype" : product.producttype,
-        "videopath" : product.videopath,
-        "categoryid":product.category.id,
+        "videopath" : product.videopath, 
         "specifications":specifications_lst,
         "purchase_way":purchase_way,
         "lighlight" : product.lighlight,  
         "tags" : list(product.tags.all().values("id", "name")),
     }
+
+    if product.category:
+        product_dict['categoryid'] = product.category.id
+    else:
+        product_dict['categoryid'] =  ""
+
+
     if detail:
         # 获取详细信息 
         product_dict['content'] =  product.content
