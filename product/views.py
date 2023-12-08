@@ -241,15 +241,16 @@ class ProductView(APIView):
             if int(recommend_prodcut) == 1: 
                 kwargs['recommend'] = 1
  
-        if 'category' in request.GET:
+        if 'category' in request.GET: 
             category = request.GET['category'].strip()
-            try:
-                category = Category.objects.get(name=category)
-                kwargs['category'] = category
-            except Category.DoesNotExist:
-                result['status'] = SUCCESS
-                result['msg'] = '商品分类不存在'
-                return HttpResponse(json.dumps(result), content_type="application/json")
+            if category != "-1":
+                try:
+                    category = Category.objects.get(name=category)
+                    kwargs['category'] = category
+                except Category.DoesNotExist:
+                    result['status'] = SUCCESS
+                    result['msg'] = '商品分类不存在'
+                    return HttpResponse(json.dumps(result), content_type="application/json")
  
         if 'mine' in request.GET:
             kwargs['user'] = user
@@ -388,8 +389,17 @@ class ProductView(APIView):
                     result['status'] = ERROR
                     result['msg'] = 'content参数不能为空'
                     return HttpResponse(json.dumps(result), content_type="application/json")
+                
+            if 'category' in data:
+                category = data['category'] 
+                try:
+                    category = Category.objects.get(id= category)
+                    product.category = category
+                except Category.DoesNotExist:
+                    result['status'] = ERROR
+                    result['msg'] = "未找到相关类别"
+                    return HttpResponse(json.dumps(result), content_type="application/json")
             
- 
             product = editData(product, data, request)
             product.save()
 

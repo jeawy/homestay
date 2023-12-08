@@ -18,7 +18,7 @@ class Category(models.Model):
     # 是否可见
     visible = models.PositiveSmallIntegerField(default= 1)
 
-    # 0 默认表示民宿类型，1表示其他
+    # 0 默认表示民宿类型，1表示景区门票，10其他
     categorytype = models.PositiveSmallIntegerField(default= 0)
      
     
@@ -30,5 +30,9 @@ class Category(models.Model):
     
     class Meta:
         default_permissions = () 
+        constraints = [
+            models.UniqueConstraint(fields = ['name', 'level', "parent"], 
+            name = "category_unique")
+        ]
         ordering = ["sort"]
 

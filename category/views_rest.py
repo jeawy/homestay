@@ -24,7 +24,17 @@ class CategoryRestView(APIView):
      
     def get(self, request): 
         content = {} 
-        categories = list(Category.objects.filter(level=1).values(
+        kwargs = {
+            "level":1
+        }
+        if 'categorytype' in request.GET:
+            categorytype = request.GET['categorytype']
+            kwargs['categorytype'] = categorytype
+        elif 'categorytypes' in request.GET:
+            categorytypes = request.GET['categorytypes'].split(",")
+            kwargs['categorytype__in'] = categorytypes
+
+        categories = list(Category.objects.filter(**kwargs).values(
             "id","name", "icon", "visible", "categorytype", "sort"
         ))
         for category in categories:
@@ -74,7 +84,7 @@ class CategoryRestView(APIView):
             elif check_name_exist(name):
                 # 名称已经存在
                 result['status'] = ERROR
-                result['msg'] ='name duplicated.'
+                result['msg'] ='类名重复.'
                 return HttpResponse(json.dumps(result), content_type="application/json")
             visible = 1
             if 'visible' in request.POST:
