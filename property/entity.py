@@ -22,7 +22,7 @@ class EntityType(object):
     # 实训项目实体
     TRAINING = 8 
     
-    # 通知、公告、百事通、社区见闻
+    # 商品
     PRODUCT = 9
     # 点赞
     LIKE = 10
@@ -46,6 +46,10 @@ class EntityType(object):
 
     # 订单
     BILL = 17
+    
+    # 通知、公告、百事通、社区见闻
+    CONTENT = 18 # 
+    
     @classmethod
     def get_entities(cls):
         return [cls.TASK, cls.WK_TEMPLATE, cls.RECORD, 

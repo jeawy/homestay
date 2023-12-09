@@ -12,8 +12,7 @@ from withdraw.models import WithDraw, WithdrawImgs
 from django.views import View 
 import json 
 from django.conf import settings
-from common.fileupload import FileUpload
-from incomes.comm import statisticsMoney, statisticsMoneyOrg
+from common.fileupload import FileUpload 
 from community.comm import getUserCommunities
 from community.comm_statistics import community_statatics
 from withdraw.comm import has_submit_withdraw, single_withdraw
@@ -144,20 +143,8 @@ class WithDrawView(APIView):
             except Community.DoesNotExist:
                 result['msg'] = "小区不存在"
                 return HttpResponse(json.dumps(result), content_type="application/json")
-        else:
-            withdraw.user = user
-            # 普通业主申请提现
-            if has_submit_withdraw(user = user) :
-                result['msg'] = "每月只能申请一次提现"
-                return HttpResponse(json.dumps(result), content_type="application/json")
-
-            income_total,expend_total,left = statisticsMoney(user)
-            if left < settings.MINMONEY:
-                result['msg'] = "余额不足{0}元，无法提现".format(str(settings.MINMONEY))
-                return HttpResponse(json.dumps(result), content_type="application/json")
-            content =  user.username+"发起了提现申请，请尽快处理" 
-            withdraw.money = left
-            withdraw.save() 
+        else: 
+            pass
         result['status'] = SUCCESS
         result['msg'] = '申请已提交'
         # 发通知给平台

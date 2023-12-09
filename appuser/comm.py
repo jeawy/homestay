@@ -144,7 +144,10 @@ def get_simple_user_info(users):
         user_dict['id'] = user_item.id
         user_dict['username'] =  user_item.username if user_item.username is not None   else ""
         user_dict['uuid'] = user_item.uuid
-        user_dict['phone'] = user_item.phone 
+        user_dict['is_active'] = user_item.is_active
+        user_dict['virtual'] = user_item.virtual
+        user_dict['thumbnail_portait'] = user_item.thumbnail_portait
+        user_dict['phone'] = user_item.phone  
         user_list.append(user_dict) 
     return user_list
 
@@ -156,6 +159,7 @@ def get_user_info(users):
     user_list = []
     for user_item in users:
         user_dict = {}
+        user_dict['uuid'] = user_item.uuid
         user_dict['id'] = user_item.id
         user_dict['username'] = user_item.username
         user_dict['email'] = user_item.email
@@ -184,8 +188,9 @@ def get_user_info(users):
             user_dict['role'] = None
         user_dict['sex'] = user_item.sex
         
-        
         user_dict['is_active'] = user_item.is_active
+        user_dict['virtual'] = user_item.virtual
+        user_dict['thumbnail_portait'] = user_item.thumbnail_portait
         user_list.append(user_dict) 
     return user_list
 

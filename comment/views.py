@@ -4,6 +4,7 @@ import uuid
 from property.entity import EntityType
 from rest_framework.views import APIView
 from django.views import View
+from appuser.models import AdaptorUser as User
 from django.http import HttpResponse
 from common.fileupload import FileUpload
 from comment.models import Comment, CommentImgs
@@ -11,7 +12,7 @@ from datetime import datetime
 from common.logutils import getLogger
 import json
 import time
-from comment.comm import get_comments_list, check_pid 
+from comment.comm import get_comments_list, check_pid , get_comments_sub_list
 from property import settings
 from property.code import * 
 from organize.models import Organize
@@ -29,6 +30,7 @@ class CommentAnonymousView(View):
              
             kwargs['entity_uuid'] = entity_uuid 
             kwargs['entity_type'] = entity_type 
+            kwargs['pid__isnull'] = True 
             
             if "page" in request.GET and "pagenum" in request.GET:
                 # 分页
@@ -51,7 +53,7 @@ class CommentAnonymousView(View):
             content['status'] = SUCCESS
             content['msg'] = {
                 "total" : total,
-                "list" : get_comments_list(comments)
+                "list" : get_comments_sub_list(comments)
             } 
         else:
             content['status'] = COMMENT.COMMENT_ARGUMENT_ERROR_CONTENT_EMPTY
@@ -142,15 +144,38 @@ class CommentView(APIView):
                 comment.content = content
             else:
                 result['status'] = COMMENT.COMMENT_ARGUMENT_ERROR_CONTENT_EMPTY
-                result['msg'] = 'content is empty.'
+                result['msg'] = '请输入评价内容'
                 return HttpResponse(json.dumps(result), content_type="application/json")
             
             comment.entity_uuid = entity_uuid  
             comment.entity_type = entity_type
-            comment.url = url
-            comment.user = user
+            comment.url = url 
             comment.uuid = uuid.uuid4()
-            pcurl = "/product/product-detail?id="+entity_uuid
+            
+
+            if 'rate' in request.POST:
+                rate = request.POST['rate']
+                comment.rate = rate
+
+
+            if 'useruuid' in request.POST:
+                useruuid = request.POST['useruuid']
+                try:
+                    comment.user = User.objects.get(uuid = useruuid)
+                except User.DoesNotExist:
+                    result['msg'] = '用户不存在'
+                    return HttpResponse(json.dumps(result), content_type="application/json")
+            else:
+                comment.user = user
+            
+            if 'datetime' in request.POST:
+                datetimestr = request.POST['datetime']
+                comment.date  = datetime.strptime(datetimestr, settings.DATETIMEFORMAT)
+            else:
+                comment.date = datetime.now()
+                 
+        
+            pcurl = "/product-manage/product-detail?uuid="+entity_uuid
             # pid 必填项
             if 'puuid' in request.POST:
                 puuid = request.POST['puuid'].strip()
@@ -206,6 +231,7 @@ class CommentView(APIView):
     
 
     def put(self, request):
+        # 上传图片
         data = request.POST
         result = {} 
         if 'uuid' in data:

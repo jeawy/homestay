@@ -3,6 +3,7 @@ from common.logutils import getLogger
 import time
 import traceback
 import requests
+import uuid
 from datetime import datetime
 import configparser
 from django.shortcuts import render
@@ -20,6 +21,7 @@ import json
 import random
 import string
 from django.utils import timezone
+from common.fileupload import FileUpload
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse, HttpResponseForbidden 
@@ -64,25 +66,12 @@ class UserView(APIView):
             # 如果参数中有社区的信息，并且不是超级用户，
             # 则认为是物业管理人员，那么只有IT manager有权限，另外在该小区中分配了当前权限的用户也有
             # 获取当前用户是否有用户管理权限
-            if 'communityuuid' in request.GET:
-                #  物业获取自己的员工列表
-                communityuuid = request.GET['communityuuid'].strip() 
-                try:
-                    community = Community.objects.get(uuid = communityuuid)
-                    perm = user.has_community_perm('appuser.baseuser.admin_management', community)
-                    content['status'] = SUCCESS
-                    content['msg'] = {
-                        "admin_management":perm
-                    }
-                except Community.DoesNotExist:
-                    content['status'] = ERROR
-                    content['msg'] = "未找到相关小区" 
-            else: 
-                perm = user.has_role_perm('appuser.baseuser.admin_management')
-                content['status'] = SUCCESS
-                content['msg'] = {
-                    "admin_management":perm
-                }
+             
+            perm = user.has_role_perm('appuser.baseuser.admin_management')
+            content['status'] = SUCCESS
+            content['msg'] = {
+                "admin_management":perm
+            }
             return HttpResponse(json.dumps(content), content_type='application/json')
         
         community_kwargs = {}
@@ -91,23 +80,7 @@ class UserView(APIView):
             username = request.GET['username'].strip()
             kwargs['username__icontains'] = username
             community_kwargs['user__username__icontains'] = username
-
-        if 'communityuuid' in request.GET:
-            #  物业获取自己的员工列表
-            communityuuid = request.GET['communityuuid'].strip() 
-            
-            community_kwargs['community__uuid'] = communityuuid
-            staffs = Staff.objects.filter(**community_kwargs )
-            users = [staff.user for staff in staffs]
-            if 'simple' in request.GET:
-                user_list = get_simple_user_info(users)
-            else:
-                user_list = get_user_info(users)
-
-            return HttpResponse(json.dumps(user_list), content_type='application/json')
-             
-
-
+ 
         if 'mine' in request.GET: 
             content['status'] = SUCCESS
             content['msg'] = get_user_detail_info(user)
@@ -120,7 +93,9 @@ class UserView(APIView):
             except ValueError:
                 pass
 
-        
+        if 'virtual' in request.GET:
+            virtual = request.GET['virtual'].strip()
+            kwargs['virtual'] = virtual
 
         if 'permissions' in request.GET:
 
@@ -165,10 +140,8 @@ class UserView(APIView):
         }
         user = request.user
 
-        if len(request.POST) == 0:
-            data = request.data
-        else:
-            data = request.POST
+        data = request.POST
+
         if 'method' in data:
             method = data['method'].lower().strip()
             if method == 'put':  # 修改
@@ -180,11 +153,11 @@ class UserView(APIView):
         if not user.has_role_perm('appuser.baseuser.admin_management'):
             return HttpResponse('Forbidden', status=403)
         else:
-            if 'username' in data and 'email' in data:
+            if 'username' in data :
                 # 创建用户
                 newuser = User()
                 username = data['username'].strip()
-                email = data['email'].strip()
+                 
                 result = check_name(username)
                 if not result:
                     if check_name_exist(username):
@@ -196,22 +169,7 @@ class UserView(APIView):
                     content['msg'] = "用户名长度需要在0与128之间"
                     return HttpResponse(json.dumps(content), content_type="application/json")
 
-                result = verify_email(email)
-                if result:
-                    # 验证email是否重复
-                    if not check_email(email):
-                        if check_email_exist(email):
-                            content['msg'] = '邮箱重复不可使用'
-                            return HttpResponse(json.dumps(content), content_type="application/json")
-                        else:
-                            newuser.email = email
-                    else:
-                        content['msg'] = '邮箱长度需要在0与128之间'
-                        return HttpResponse(json.dumps(content), content_type="application/json")
-                else:
-                    content['msg'] = '邮箱格式错误'
-                    return HttpResponse(json.dumps(content), content_type="application/json")
-
+                
                 if 'phone' in data:
                     phone = data['phone'].strip()
                      
@@ -228,17 +186,39 @@ class UserView(APIView):
                         else:
                             content['msg'] = '手机号码格式错误'
                             return HttpResponse(json.dumps(content), content_type="application/json")
+ 
+                if 'virtual' in data:
+                    virtual = data['virtual'].strip()
+                    newuser.virtual = virtual
 
-                if 'sex' in data:
-                    sex = data['sex'].strip()
-                    result = check_sex(sex, content)
-                    if result:
-                        newuser.sex = sex
+
+                # 获取isactive字段
+                if 'isactive' in data:
+                    isactive = data['isactive'].strip()
+                    try:
+                        isactive = int(isactive)
+                    except ValueError:
+                        content['msg'] = "isactive需要是整数"
+                        return HttpResponse(json.dumps(content), content_type="application/json")
+                    if isactive in [0, 1]:
+                        user.is_active = isactive
                     else:
-                        content['msg'] = '性别只能为男或女'
+                        content['msg'] = "isactive需要是0或者1 "
                         return HttpResponse(json.dumps(content), content_type="application/json")
 
-               
+                # 获取sex字段
+                if 'sex' in data:
+                    sex = data['sex'].strip()
+                    if sex in ['男', '女']:
+                        if sex == '男':
+                            user.sex = '男'
+                        else:
+                            user.sex = '女'
+                    else:
+                        content['msg'] = "性别需要是男或女 "
+                        return HttpResponse(json.dumps(content), content_type="application/json")
+                    
+                    
                 if 'password' in data:
                     pwd = data['password'].strip()
                     # 判断用户输入密码是否为空，若为空则返回提示
@@ -247,7 +227,24 @@ class UserView(APIView):
                     else:
                         content['msg'] = '未输入密码'
                         return HttpResponse(json.dumps(content), content_type="application/json")
+                    
+                newuser.uuid = uuid.uuid4() 
                 newuser.save()
+                if 'img' in request.FILES:
+                    # 获取主图
+                    imagefile = request.FILES['img']
+                    pre = datetime.now().strftime("%Y%m%d%H%M%S%f")
+                    file_name, file_extension = os.path.splitext(
+                        imagefile.name)
+                    filename = pre+file_extension
+                    FileUpload.upload(imagefile,
+                                        os.path.join('portrait', str(user.id)),
+                                        filename)
+                    filepath = os.path.join('portrait', str(user.id), filename  )
+                    
+                    newuser.thumbnail_portait = filepath
+                    newuser.save()
+
                 content['status'] = SUCCESS
                 content['msg'] = '添加成功'
                 return HttpResponse(json.dumps(content), content_type="application/json")
@@ -280,7 +277,24 @@ class UserView(APIView):
             except User.DoesNotExist:
                 content['msg'] = '找不到用户id'
                 return HttpResponse(json.dumps(content), content_type="application/json")
-         
+
+
+        if 'username' in data :  
+            username = data['username'].strip()
+                
+            result = check_name(username)
+            if not result:
+                if check_name_exist(username, user.id):
+                    content['msg'] = "用户名重复不可使用"
+                    return HttpResponse(json.dumps(content), content_type="application/json")
+                else:
+                    user.username = username
+            else:
+                content['msg'] = "用户名长度需要在0与128之间"
+                return HttpResponse(json.dumps(content), content_type="application/json")
+
+
+
         # 获取name字段 
         # 获取email字段
         if 'email' in data:
@@ -316,6 +330,13 @@ class UserView(APIView):
                     return HttpResponse(json.dumps(content), content_type="application/json")
             else:
                 user.phone = phone # 设置手机号码为空
+
+        
+        if 'virtual' in data:
+            virtual = data['virtual'].strip()
+            user.virtual = virtual
+
+
         # 获取isactive字段
         if 'isactive' in data:
             isactive = data['isactive'].strip()
@@ -380,7 +401,26 @@ class UserView(APIView):
             with open(filepath,'wb') as f: 
                 f.write(r.content) 
                 f.close()
- 
+        
+        if 'img' in request.FILES:
+            # 获取主图
+            imagefile = request.FILES['img']
+            pre = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            file_name, file_extension = os.path.splitext(
+                imagefile.name)
+            filename = pre+file_extension
+            FileUpload.upload(imagefile,
+                                os.path.join('portrait', str(user.id)),
+                                filename)
+            filepath = os.path.join('portrait', str(user.id), filename  )
+            if user.thumbnail_portait:
+                # 删除旧的缩略图
+                imgpath = os.path.join(settings.FILEPATH, user.thumbnail_portait )
+                if os.path.isfile(imgpath): 
+                    os.remove(imgpath)
+            user.thumbnail_portait = filepath
+
+            
         user.save()
         content['status'] = SUCCESS
         content['msg'] = '修改成功' 
@@ -395,11 +435,8 @@ class UserView(APIView):
             'status': ERROR,
             'msg': ''
         }
-        # 处理前端发送数据
-        if len(request.POST) == 0:
-            data = request.data
-        else:
-            data = request.POST
+        # 处理前端发送数据 
+        data = request.POST
 
         user = request.user
         # 判断用户是否具有管理员权限

@@ -61,8 +61,7 @@ urlpatterns = [
     url(r'^api/webcoin/', include('webcoin.urls', namespace="webcoin")),
 
     url(r'^api/cart/', include('cart.urls', namespace="cart")), 
-    url(r'^api/like/', include('like.urls', namespace="like")), 
-    url(r'^api/incomes/', include('incomes.urls', namespace="incomes")),
+    url(r'^api/like/', include('like.urls', namespace="like")),  
     url(r'^api/withdraw/', include('withdraw.urls', namespace="withdraw")), 
     url(r'^api/backlog/', include('backlog.urls', namespace="backlog")),   
     url(r'^api/appshare/', include('appshare.urls', namespace="appshare")),

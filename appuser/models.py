@@ -26,9 +26,12 @@ class BaseUser(BaseDate, AbstractBaseUser, PermissionsMixin):
     is_verified = models.BooleanField( _('is active'), default=False) # 
     
     is_active   = models.BooleanField( _('is active'), default=True) # 
-
+     
     is_admin    = models.BooleanField( _('is admin'), default=False) # u'是否为管理员'
-      
+    
+    # 是否是虚拟用户，0表示不是虚拟用户，1 表示虚拟用户
+    virtual = models.PositiveSmallIntegerField(default= 0)
+
     #identify is user saved the portraint they uploaded
     #True: they saved
     #False: by default, they didn't save

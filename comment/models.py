@@ -7,11 +7,12 @@ from django.conf import settings
 import os
 
 
-class Comment(BaseDate):
+class Comment(models.Model):
     """
     评论/备注信息表
     """
     uuid = models.CharField(  max_length=64, unique=True)
+    date = models.DateTimeField()
     # 评论人
     user = models.ForeignKey(User, related_name='comment_creator',
                                 on_delete=models.PROTECT)
@@ -20,6 +21,9 @@ class Comment(BaseDate):
     # 用来保存备注或者评论的实体表的id
     entity_uuid =  models.CharField(max_length=64)
     entity_type = models.SmallIntegerField()
+    
+    # 评分
+    rate = models.SmallIntegerField(default=5)
     # pid进行自关联,可以为空
     pid = models.ForeignKey("comment", null=True, on_delete=models.CASCADE)
    

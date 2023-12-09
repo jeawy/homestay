@@ -32,7 +32,7 @@ class Product(BaseDate):
     # 商品标题
     title = models.CharField(max_length=200,null=False)
     
-    # 商品类别：0 表示民宿，1 表示其他
+    # 商品类别：0 表示民宿，1景区门票 10 表示其他
     producttype = models.PositiveSmallIntegerField(default= 0)
     
     # 商品分类
