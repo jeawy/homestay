@@ -45,6 +45,7 @@ def get_comments_list(comments):
             "subs": sub_comment_list, # 子评论 
             "user": user_dict,
             "rate": comment.rate,
+            "comeway": comment.comeway,
             "parent":parent
         }
         comment_list.append( comment_dict )
@@ -80,6 +81,7 @@ def get_2_comments_list(comments):
             "date": time.mktime(comment.date.timetuple()), 
             "user": user_dict,
             "rate": comment.rate,
+            "comeway": comment.comeway,
             "parent":parent
         }
         comment_list.append( comment_dict )
@@ -129,7 +131,8 @@ def get_comments_sub_list(comments):
             "date": time.mktime(comment.date.timetuple()),
             "subs": sub_comment_list, # 子评论 
             "user": user_dict,
-            "rate": comment.rate,
+            "rate": comment.rate, 
+            "comeway": comment.comeway,
             "parent":parent
         }
         comment_list.append( comment_dict )

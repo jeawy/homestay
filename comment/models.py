@@ -22,6 +22,8 @@ class Comment(models.Model):
     entity_uuid =  models.CharField(max_length=64)
     entity_type = models.SmallIntegerField()
     
+    # 评价来源，0 表示虚拟评价
+    comeway =  models.SmallIntegerField(default=1)
     # 评分
     rate = models.SmallIntegerField(default=5)
     # pid进行自关联,可以为空

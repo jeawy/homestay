@@ -162,6 +162,7 @@ class CommentView(APIView):
                 useruuid = request.POST['useruuid']
                 try:
                     comment.user = User.objects.get(uuid = useruuid)
+                    comment.comeway = 0 # 虚拟评价
                 except User.DoesNotExist:
                     result['msg'] = '用户不存在'
                     return HttpResponse(json.dumps(result), content_type="application/json")
