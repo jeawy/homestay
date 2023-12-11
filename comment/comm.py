@@ -45,6 +45,13 @@ def get_comments_list(comments):
             "subs": sub_comment_list, # 子评论 
             "user": user_dict,
             "rate": comment.rate,
+
+            "real_rate": comment.real_rate,
+            "service_rate": comment.service_rate,
+            "health_rate": comment.health_rate,
+            "location_rate": comment.location_rate,
+
+            
             "comeway": comment.comeway,
             "parent":parent
         }
@@ -81,6 +88,13 @@ def get_2_comments_list(comments):
             "date": time.mktime(comment.date.timetuple()), 
             "user": user_dict,
             "rate": comment.rate,
+
+            "real_rate": comment.real_rate,
+            "service_rate": comment.service_rate,
+            "health_rate": comment.health_rate,
+            "location_rate": comment.location_rate,
+
+
             "comeway": comment.comeway,
             "parent":parent
         }
@@ -132,6 +146,13 @@ def get_comments_sub_list(comments):
             "subs": sub_comment_list, # 子评论 
             "user": user_dict,
             "rate": comment.rate, 
+
+            "real_rate": comment.real_rate,
+            "service_rate": comment.service_rate,
+            "health_rate": comment.health_rate,
+            "location_rate": comment.location_rate,
+
+
             "comeway": comment.comeway,
             "parent":parent
         }

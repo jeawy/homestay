@@ -156,6 +156,23 @@ class CommentView(APIView):
             if 'rate' in request.POST:
                 rate = request.POST['rate']
                 comment.rate = rate
+            
+            if 'real_rate' in request.POST:
+                real_rate = request.POST['real_rate']
+                comment.real_rate = real_rate
+
+            if 'service_rate' in request.POST:
+                service_rate = request.POST['service_rate']
+                comment.service_rate = service_rate
+            
+            if 'health_rate' in request.POST:
+                health_rate = request.POST['health_rate']
+                comment.health_rate = health_rate 
+            
+            if 'location_rate' in request.POST:
+                location_rate = request.POST['location_rate']
+                comment.location_rate = location_rate
+
 
 
             if 'useruuid' in request.POST:

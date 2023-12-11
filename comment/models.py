@@ -26,6 +26,18 @@ class Comment(models.Model):
     comeway =  models.SmallIntegerField(default=1)
     # 评分
     rate = models.SmallIntegerField(default=5)
+
+
+    # 实拍度
+    real_rate = models.SmallIntegerField(default=5)
+    # 服务
+    service_rate = models.SmallIntegerField(default=5)
+    # 卫生
+    health_rate = models.SmallIntegerField(default=5)
+    # 位置
+    location_rate = models.SmallIntegerField(default=5)
+
+
     # pid进行自关联,可以为空
     pid = models.ForeignKey("comment", null=True, on_delete=models.CASCADE)
    
