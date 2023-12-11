@@ -429,6 +429,7 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         "uuid":product.uuid,
         "title":product.title, 
         "content":product.content,
+        "rate":product.rate,
         "picture":product.picture,
         "turns":turns,
         "videopath" : product.videopath,
@@ -532,6 +533,7 @@ def get_single_product(product, detail = False):
     product_dict = {
         "id":product_id,
         "uuid":product.uuid,
+        "rate":product.rate,
         "creator_info":product_creator_dct, 
         "picture":picture,
         "turns":turns,

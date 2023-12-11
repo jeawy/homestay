@@ -35,6 +35,9 @@ class Product(BaseDate):
     # 商品类别：0 表示民宿，1景区门票 10 表示其他
     producttype = models.PositiveSmallIntegerField(default= 0)
     
+    # 评分
+    rate = models.FloatField(default=5.0)
+
     # 商品分类
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,null= True )
 

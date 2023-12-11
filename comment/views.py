@@ -3,6 +3,7 @@ import os
 import uuid
 from property.entity import EntityType
 from rest_framework.views import APIView
+from django.db.models import Sum, Avg
 from django.views import View
 from appuser.models import AdaptorUser as User
 from django.http import HttpResponse
@@ -12,7 +13,7 @@ from datetime import datetime
 from common.logutils import getLogger
 import json
 import time
-from comment.comm import get_comments_list, check_pid , get_comments_sub_list
+from comment.comm import get_comments_list, cal_rate , get_comments_sub_list
 from property import settings
 from property.code import * 
 from organize.models import Organize
@@ -31,8 +32,31 @@ class CommentAnonymousView(View):
             kwargs['entity_uuid'] = entity_uuid 
             kwargs['entity_type'] = entity_type 
             kwargs['pid__isnull'] = True 
+            if 'ratesummary' in  request.GET:
+                #评分统计
+                '''
+                summary:{//评分总统计 
+                    total_service_rate:5,
+                    total_health_rate:5,
+                    total_real_rate : 5,
+                    total_location_rate :5,
+                }
+                '''
+                rates = Comment.objects.filter( **kwargs).aggregate(
+                    Avg("rate"), Avg("real_rate"), Avg("service_rate"), 
+                    Avg("health_rate"), Avg("location_rate"), 
+                )
+                summary = {  
+                    "total_service_rate":round (rates['service_rate__avg'], 1)   if rates['service_rate__avg'] else "--",
+                    "total_health_rate":round (rates['health_rate__avg'], 1)   if rates['health_rate__avg'] else "--",
+                    "total_real_rate" : round (rates['real_rate__avg'], 1) if rates['real_rate__avg'] else "--",
+                    "total_location_rate" :round (rates['location_rate__avg'], 1)   if rates['location_rate__avg'] else "--",
+                }
+                content['status'] = SUCCESS
+                content['msg'] = summary
+                return HttpResponse(json.dumps(content), content_type="application/json")
             
-            if "page" in request.GET and "pagenum" in request.GET:
+            elif "page" in request.GET and "pagenum" in request.GET:
                 # 分页
                 pagenum = request.GET['pagenum']
                 page = request.GET['page']
@@ -218,6 +242,9 @@ class CommentView(APIView):
                     result['msg'] = 'pid not found.'
                     return HttpResponse(json.dumps(result), content_type="application/json") 
             comment.save()
+            cal_rate(entity_uuid, entity_type)
+            # 更新商品评分
+
             # 发消息通知
             if 'orguuid' in request.POST:
                 # 目前获得点赞的文章都是物业发出的，所以消息通知会发给物业

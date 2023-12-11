@@ -2,7 +2,45 @@ import time
 from comment.models import Comment, CommentImgs
 from property.code import ERROR, SUCCESS
 from property.entity import EntityType
+from django.db.models import Sum, Avg
+from product.models import Product
 
+
+def cal_rate(entity_uuid, entity_type):
+
+    if entity_type == EntityType.PRODUCT:
+        # 只有商品才需要评分 
+        kwargs = {}
+        kwargs['entity_uuid'] = entity_uuid 
+        kwargs['entity_type'] = entity_type 
+        kwargs['pid__isnull'] = True 
+        rates = Comment.objects.filter( **kwargs).aggregate(
+                        Avg("rate"), Avg("real_rate"), Avg("service_rate"), 
+                        Avg("health_rate"), Avg("location_rate"), 
+                    )
+        
+        total_rate = 5 
+        if rates['service_rate__avg']:
+            total_rate += round (rates['service_rate__avg'], 1) 
+        
+        if rates['health_rate__avg']:
+            total_rate += round (rates['health_rate__avg'], 1) 
+        
+        if rates['real_rate__avg']:
+            total_rate += round (rates['real_rate__avg'], 1) 
+        
+        if rates['location_rate__avg']:
+            total_rate += round (rates['location_rate__avg'], 1) 
+
+        total_rate = total_rate /4
+
+        try:
+            product = Product.objects.get(uuid =entity_uuid )
+            product.rate = total_rate
+            product.save()
+        except Product.DoesNotExist:
+            pass
+ 
 def get_comments_list(comments):
     '''
         返回comment的列表,递归方式
