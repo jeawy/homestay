@@ -30,7 +30,8 @@ class CommentAnonymousView(View):
             entity_type = request.GET['entity_type']
              
             kwargs['entity_uuid'] = entity_uuid 
-            kwargs['entity_type'] = entity_type 
+            kwargs['entity_type'] = entity_type  
+
             kwargs['pid__isnull'] = True 
             if 'ratesummary' in  request.GET:
                 #评分统计
@@ -156,7 +157,7 @@ class CommentView(APIView):
 
         comment = Comment()
         comment.creator = user
-
+  
         # 内容 必填项
         if 'content' in request.POST and 'entity_uuid' in request.POST and \
             'entity_type' in request.POST and 'url'   in request.POST:

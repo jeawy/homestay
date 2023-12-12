@@ -1,4 +1,5 @@
 import time
+import pdb
 from comment.models import Comment, CommentImgs
 from property.code import ERROR, SUCCESS
 from property.entity import EntityType
@@ -8,7 +9,7 @@ from product.models import Product
 
 def cal_rate(entity_uuid, entity_type):
 
-    if entity_type == EntityType.PRODUCT:
+    if int(entity_type) == EntityType.PRODUCT:
         # 只有商品才需要评分 
         kwargs = {}
         kwargs['entity_uuid'] = entity_uuid 
@@ -19,7 +20,7 @@ def cal_rate(entity_uuid, entity_type):
                         Avg("health_rate"), Avg("location_rate"), 
                     )
         
-        total_rate = 5 
+        total_rate = 0 
         if rates['service_rate__avg']:
             total_rate += round (rates['service_rate__avg'], 1) 
         
@@ -32,11 +33,11 @@ def cal_rate(entity_uuid, entity_type):
         if rates['location_rate__avg']:
             total_rate += round (rates['location_rate__avg'], 1) 
 
-        total_rate = total_rate /4
+        total_rate = total_rate / 4 
 
         try:
             product = Product.objects.get(uuid =entity_uuid )
-            product.rate = total_rate
+            product.rate = round(total_rate, 1)
             product.save()
         except Product.DoesNotExist:
             pass
