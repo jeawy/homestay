@@ -332,6 +332,8 @@ class CommentView(APIView):
                                       comment.entity_uuid, comment.entity_type))
                 
                 CommentImgs.objects.filter(comment = comment).delete()
+                # 删除的时候，更新评分
+                cal_rate(comment.entity_uuid,  EntityType.PRODUCT)
                 comment.delete()
                 result['status'] = SUCCESS
                 result['msg'] = '已删除'
