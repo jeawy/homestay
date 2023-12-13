@@ -16,7 +16,7 @@ from product.models import Product, Specifications, Category
 import uuid
 from tags.comm import add 
 from product.comm import product_infos_lst, specifications_infos_lst,\
-editData, get_single_product, addSpecs, setHomestayPrice, homestay_infos_lst,\
+editData, get_single_product, addSpecs, addExtra, setHomestayPrice, homestay_infos_lst,\
 get_single_homestay_product  
 logger = getLogger(True, 'product', False)
  
@@ -176,9 +176,8 @@ class ProductView(APIView):
             productuuid = request.GET['uuid'] 
             try:
                 product = Product.objects.get(uuid = productuuid) 
-                if product.producttype == 0:
-                    msg = get_single_homestay_product(product, detail=True, admin=admin)
-                    
+                if product.producttype == 0 or product.producttype == 2 :
+                    msg = get_single_homestay_product(product, detail=True, admin=admin) 
                 else:
                     msg = get_single_product(product, detail= True)
                 result = { 
@@ -321,7 +320,8 @@ class ProductView(APIView):
             content = data['content']
               
             product = editData(product, data, request)
-
+            
+      
             product.user = user
             product.content = content
             product.title = title 
@@ -332,11 +332,12 @@ class ProductView(APIView):
             if 'tags' in data: # 添加标签
                 tags = data['tags'].split(",")
                 producttype = 0
-                if 'producttype' in data:
-                    producttype = int( data['producttype'].strip())
+                
                  
                 if producttype == 1:
                     label = "product"
+                elif producttype == 2:
+                    label = "car"
                 else:
                     label = "homestay"
                 for tag in tags:
@@ -345,6 +346,7 @@ class ProductView(APIView):
              
              
             addSpecs(product, data)
+            addExtra(product, data)
             if 'pricemode' in data:
                 # 价格覆盖模式：0 仅覆盖日历上未设定价格的日期
                 #              1 覆盖日历所有价格
@@ -418,6 +420,7 @@ class ProductView(APIView):
                         product.tags.add(add(tag, label))
             
             addSpecs(product, data) 
+            addExtra(product, data)
             if 'pricemode' in data:
                 # 价格覆盖模式：0 仅覆盖日历上未设定价格的日期
                 #              1 覆盖日历所有价格

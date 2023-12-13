@@ -196,7 +196,7 @@ class ExtraItems(models.Model):
     name = models.CharField(max_length=200 ) #  民宿用date字段，非民宿用这个字段
      
     # 商品单价
-    price = models.DecimalField(max_digits=8, decimal_places=2 )
+    price = models.FloatField(default=0 )
   
     # 商品规格描述
     remark = models.CharField(max_length=1024,null=True)

@@ -7,7 +7,7 @@ import traceback
 import os
 from common.logutils import getLogger
 from property.code import SUCCESS, ERROR
-from product.models import Product,Specifications, ProductImages
+from product.models import Product,Specifications, ProductImages, ExtraItems
 from product.models import PurchaseWay,Bill
 from common.fun import timeStamp
 from django.conf import settings
@@ -172,6 +172,52 @@ def editData(product, data, request):
     
     return product
 
+
+def addExtra(product, data):
+    # 添加额外服务
+    if 'extras' in data:
+        """
+        parms：price 商品单价 
+        parms：name 商品名称 
+        parms：remark 备注
+        extras数据格式：
+        [{"price":100.0, "remark":"", "name":'大衣'  } 
+        """
+        product.extra_products.all().delete()
+
+        extras = json.loads(data['extras'])
+
+        for extra in extras:
+            # 获取单价
+            try:
+                price = extra['price']
+            except Exception:
+                logger.error(traceback.format_exc())
+                continue
+            else:
+                try:
+                    price = float(price)
+                except ValueError:
+                    logger.error(traceback.format_exc())
+                    continue
+            
+         
+            # 获取名称
+            try:
+                name = extra['name']
+            except Exception:
+                logger.error(traceback.format_exc())
+                continue
+             
+            
+            remark = extra['remark']
+              
+            ExtraItems.objects.create(product = product, price = price, name = name, remark = remark)
+
+ 
+
+
+
 def addSpecs(product, data):
     if 'specifications' in data:
         """
@@ -255,12 +301,10 @@ def addSpecs(product, data):
 def setHomestayPrice(product, pricemode):
     # 设置民宿的价格, 如果product不是民宿，则会直接跳过 
     product = Product.objects.get(uuid = product.uuid)
-    if product.producttype == 0 :# 民宿
+    if product.producttype == 0 or product.producttype ==2:# 民宿或车务
         if product.holiday_price is None and product.weekday_price is None and product.workday_price is None :
-            # 没有设置价格，直接返回
-            print('23333')
-            return
-        print('product')
+            # 没有设置价格，直接返回 
+            return 
         today = datetime.now().date()
         finalday = today + relativedelta(months = 6)
         # 只设置最近6个月的房价
@@ -448,6 +492,7 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         "lighlight" : product.lighlight, 
         "housetype" : product.housetype, 
         "maxlivers" : product.maxlivers,
+        "extras" :list( product.extra_products.all().values("id", "name", "price", "remark")),
         "tags" : list(product.tags.all().values("id", "name")),
     }
     
