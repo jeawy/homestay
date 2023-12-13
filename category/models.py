@@ -18,7 +18,7 @@ class Category(models.Model):
     # 是否可见
     visible = models.PositiveSmallIntegerField(default= 1)
 
-    # 0 默认表示民宿类型，1表示景区门票，10其他
+    # 0 默认表示民宿类型，1表示景区门票，2、租车  10其他
     categorytype = models.PositiveSmallIntegerField(default= 0)
      
     

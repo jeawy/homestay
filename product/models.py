@@ -32,7 +32,7 @@ class Product(BaseDate):
     # 商品标题
     title = models.CharField(max_length=200,null=False)
     
-    # 商品类别：0 表示民宿，1景区门票 10 表示其他
+    # 商品类别：0 表示民宿，1景区门票 2租车 10 表示其他
     producttype = models.PositiveSmallIntegerField(default= 0)
     
     # 评分
@@ -183,6 +183,33 @@ class Specifications(models.Model):
                 Specifications.CASH_AND_COIN ]
     class Meta:
         default_permissions = ()
+ 
+
+
+
+class ExtraItems(models.Model):
+    """
+    额外附加到商品或民宿中的收费内容：
+    比如民宿的接送机服务，
+    """ 
+    # 商品名称
+    name = models.CharField(max_length=200 ) #  民宿用date字段，非民宿用这个字段
+     
+    # 商品单价
+    price = models.DecimalField(max_digits=8, decimal_places=2 )
+  
+    # 商品规格描述
+    remark = models.CharField(max_length=1024,null=True)
+    # 商品外键
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, 
+                                related_name='extra_products' )
+     
+    class Meta:
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(fields = ['name', 'product' ], 
+            name = "extra_items_unique")
+        ]
  
 
 class Bill(BaseDate):

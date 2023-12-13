@@ -95,7 +95,9 @@ class UserView(APIView):
 
         if 'virtual' in request.GET:
             virtual = request.GET['virtual'].strip()
-            kwargs['virtual'] = virtual
+            virtual = int(virtual)
+            if virtual != -1: 
+                kwargs['virtual'] = virtual
 
         if 'permissions' in request.GET:
 
@@ -113,23 +115,41 @@ class UserView(APIView):
                 perms_result = []
                 for i in perms_list:
                     if not i in perms_result:
-                        perms_result.append(i)
-                print(perms_result)
-
-                return HttpResponse(json.dumps(perms_result), content_type='application/json')
-
+                        perms_result.append(i) 
             else:
                 content['msg'] = '用户未分配权限'
                 return HttpResponse(json.dumps(content), content_type='application/json')
-        else:
-            users = User.objects.filter(**kwargs)
+        
         user_list = []
         if 'simple' in request.GET:
-            user_list = get_simple_user_info(users)
+            users = User.objects.filter(**kwargs)
+            result = get_simple_user_info(users) 
         else:
+            if "page" in request.GET and "pagenum" in request.GET:
+                # 分页
+                pagenum = request.GET['pagenum']
+                page = request.GET['page']
+                try:
+                    page = int(page) - 1
+                    pagenum = int(pagenum)
+                except ValueError:
+                    page = 0
+                    pagenum = settings.PAGE_NUM
+            else:
+                page = 0
+                pagenum = settings.PAGE_NUM
+            
+            users = User.objects.filter(**kwargs)[page*pagenum: (page+1)*pagenum] 
+            total = User.objects.filter(**kwargs).count()
             user_list = get_user_info(users)
-
-        return HttpResponse(json.dumps(user_list), content_type='application/json')
+            result = {
+                "status":SUCCESS,
+                "msg" : {
+                    "total":total,
+                    "list" : user_list
+                }
+            }
+        return HttpResponse(json.dumps(result), content_type='application/json')
  
     def post(self, request):
         """
@@ -169,27 +189,36 @@ class UserView(APIView):
                     content['msg'] = "用户名长度需要在0与128之间"
                     return HttpResponse(json.dumps(content), content_type="application/json")
 
-                
+                if 'virtual' in data:
+                    virtual = data['virtual'].strip()
+                    newuser.virtual = int(virtual)
+
+
                 if 'phone' in data:
                     phone = data['phone'].strip()
                      
                     if len(phone) :    
                         # 检查phone格式是否正确
-                        result = verify_phone(phone)
-                        if result:
-                            # 检查phone是否重复
+                        if newuser.virtual == 1: # 虚拟用户不验证手机格式
                             if check_phone_exist(phone):
                                 content['msg'] = '手机号码已被注册不可使用'
                                 return HttpResponse(json.dumps(content), content_type="application/json")
                             else:
                                 newuser.phone = phone
                         else:
-                            content['msg'] = '手机号码格式错误'
-                            return HttpResponse(json.dumps(content), content_type="application/json")
- 
-                if 'virtual' in data:
-                    virtual = data['virtual'].strip()
-                    newuser.virtual = virtual
+                            result = verify_phone(phone)
+                            if result:
+                                # 检查phone是否重复
+                                if check_phone_exist(phone):
+                                    content['msg'] = '手机号码已被注册不可使用'
+                                    return HttpResponse(json.dumps(content), content_type="application/json")
+                                else:
+                                    newuser.phone = phone
+                            else:
+                                content['msg'] = '手机号码格式错误'
+                                return HttpResponse(json.dumps(content), content_type="application/json")
+    
+                
 
 
                 # 获取isactive字段
@@ -311,30 +340,37 @@ class UserView(APIView):
             else:
                 content['msg'] = '邮箱格式错误'
                 return HttpResponse(json.dumps(content), content_type="application/json")
+        
+        if 'virtual' in data:
+            virtual = data['virtual'].strip()
+            user.virtual = int(virtual)
 
-        # 获取phone字段
+
         if 'phone' in data:
             phone = data['phone'].strip()
-            if len(phone) :
+                
+            if len(phone) :    
                 # 检查phone格式是否正确
-                result = verify_phone(phone)
-                if result:
-                    # 检查phone是否重复
+                if user.virtual == 1: # 虚拟用户不验证手机格式
                     if check_phone_exist(phone, user.id):
                         content['msg'] = '手机号码已被注册不可使用'
                         return HttpResponse(json.dumps(content), content_type="application/json")
                     else:
                         user.phone = phone
                 else:
-                    content['msg'] = '手机号码格式错误'
-                    return HttpResponse(json.dumps(content), content_type="application/json")
-            else:
-                user.phone = phone # 设置手机号码为空
+                    result = verify_phone(phone)
+                    if result:
+                        # 检查phone是否重复
+                        if check_phone_exist(phone, user.id):
+                            content['msg'] = '手机号码已被注册不可使用'
+                            return HttpResponse(json.dumps(content), content_type="application/json")
+                        else:
+                            user.phone = phone
+                    else:
+                        content['msg'] = '手机号码格式错误'
+                        return HttpResponse(json.dumps(content), content_type="application/json")
 
-        
-        if 'virtual' in data:
-            virtual = data['virtual'].strip()
-            user.virtual = virtual
+  
 
 
         # 获取isactive字段

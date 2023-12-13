@@ -1,5 +1,6 @@
 import pdb 
 import os
+import random
 import uuid
 from property.entity import EntityType
 from rest_framework.views import APIView
@@ -24,7 +25,8 @@ logger = getLogger(True, 'comment', False)
 class CommentAnonymousView(View):
     def get(self, request):
         content = {}  
-        kwargs = {}
+        kwargs = {} 
+
         if 'entity_uuid' in request.GET and 'entity_type' in request.GET :
             entity_uuid = request.GET['entity_uuid']
             entity_type = request.GET['entity_type']
