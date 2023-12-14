@@ -25,9 +25,12 @@ class CategoryView(View):
 
         if 'categoryid' in request.GET:
             categoryid = request.GET['categoryid']
-            categories = list(Category.objects.filter(parent__id= categoryid, visible =1).values(
-                "name", "icon", "id", "categorytype", "sort"
-            ))
+            if categoryid:
+                categories = list(Category.objects.filter(parent__id= categoryid, visible =1).values(
+                    "name", "icon", "id", "categorytype", "sort"
+                ))
+            else:
+                categories = []
         else: 
             categories = list(Category.objects.filter(**kwargs).values(
                 "name", "icon", "id", "categorytype", "sort"

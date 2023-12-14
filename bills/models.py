@@ -2,7 +2,7 @@ from statistics import mode
 from django.db import models
 from basedatas.models import PayBase
 from appuser.models import AdaptorUser as User
-from product.models import Specifications
+from product.models import Specifications, ExtraItems
 from address.models import Address
 from card.models import Card
 
@@ -36,7 +36,8 @@ class Bills(PayBase):
     
     # 订单类型
     HOMESTAY = 0 
-    OTHER = 1 
+    CAR = 2
+    OTHER = 10 
     billtype = models.PositiveSmallIntegerField(default = HOMESTAY)
     
     # 备注信息
@@ -110,6 +111,29 @@ class BillSpec(models.Model):
          ]
 
 
+class BillExstra(models.Model):
+    """订单中的额外服务"""
+ 
+    # 名称
+    name = models.CharField(max_length=200,null=False) 
+    # 单价
+    price = models.FloatField( )
+    
+    # 规格描述
+    remark = models.CharField(max_length=1024,null=True)
+    # 外键
+    bill = models.ForeignKey(Bills, on_delete=models.CASCADE  )
+
+    extra = models.ForeignKey(ExtraItems, on_delete=models.SET_NULL, related_name='bill_exstras', null=True )
+     
+     
+    class Meta: 
+        ordering = ['-id']
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(fields = ['name', 'bill'],
+            name = "bill_name_unique")
+         ]
 
 class PayCards(models.Model):
     """

@@ -12,14 +12,15 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.views import View
 from address.models import Address
+from django.db.models import Sum, Count
 from common.utils import get_final_date
 from pay.wxpayV3 import WeixinPay
 from property.code import SUCCESS,  ERROR
 from cart.models import Cart
 from property.code import ZHIFUBAO, WEIXIN
-from bills.models import Bills, BillSpec
+from bills.models import Bills, BillSpec, BillExstra
 from bills.comm import getbillno, getbill
-from product.models import Specifications 
+from product.models import Specifications, ExtraItems
 from rest_framework.views import APIView
 from common.logutils import getLogger 
 logger = getLogger(True, 'bills', False)
@@ -179,7 +180,18 @@ class OrderView(APIView):
                 for spec in specs:
                     money += spec.number * spec.price
                     gifttype = spec.spec.product.gifttype
-                money = float(money)
+                
+                # 计算额外服务金额
+                exstra =  BillExstra.objects.filter(bill = bill).aggregate(Sum("price"))
+                print(exstra)
+                print(money)
+                price__sum = exstra['price__sum'] # 如果没有数据，这是None
+
+                if price__sum:
+                    money = price__sum + float(money)
+                else:
+                    money = float(money)
+
                 result['msg'] = {
                     'status':bill.status,
                     'billno':bill.billno,
@@ -188,6 +200,7 @@ class OrderView(APIView):
             except Bills.DoesNotExist:
                 result['msg'] = "未找到订单信息"
             return HttpResponse(json.dumps(result), content_type="application/json")
+        
         if 'billuuid' in request.GET and 'delivery' in request.GET:
             # 获取订单物流信息:如果已签收了，则直接从数据库中获取物流信息，
             # 如果还没有签收，则实时查询物流信息
@@ -374,30 +387,33 @@ class OrderView(APIView):
                     bill.receiver_phone = phone
                     
                 bill.save() 
+
+                if 'extras' in data: 
+                    extras = data['extras'] 
+                    extras = json.loads(extras)
+                    for extra in extras: 
+                        try:
+                            extraitem = ExtraItems.objects.get(id = extra['id'])  
+                            BillExstra.objects.create( 
+                                name = extraitem.name,
+                                price = extraitem.price, 
+                                remark = extraitem.remark,
+                                bill = bill, 
+                                extra = extraitem 
+                            )  
+                        except ExtraItems.DoesNotExist:
+                            pass
+                        
                 for spec in specs:
                     number = spec['number']
                     spec_instance = Specifications.objects.get(id = spec['id'])
-                    if spec_instance.number < number:
-                        # 库存不足，订单提交失败
-                        bill.delete()
-                        result['msg'] = spec_instance.name + "库存不足"
-                        return HttpResponse(json.dumps(result), content_type="application/json")
-                    else:
-                        # 先不减库存，redis中减库存 
-                        if bill.ordertype == bill.COIN:
-                            # 如果是积分订单，则price存的是积分数量
-                            price = spec_instance.coin
-                        else:
-                            price = spec_instance.price
-                        
-                        if billtype == bill.HOMESTAY:
-                            # 
-                            specname = datetime.strftime(spec_instance.date, settings.DATEFORMAT)
-                        else:
-                            specname = spec_instance.name
-
+                    if billtype == 2:
+                        # 租车不用库存管理 
+                        price = spec_instance.price 
+                        specname = datetime.strftime(spec_instance.date, settings.DATEFORMAT)+"租车"
+                      
                         BillSpec.objects.create(
-                            number = number,
+                            number = 1,
                             name = specname,
                             price = price,
                             title = spec_instance.product.title,
@@ -405,22 +421,60 @@ class OrderView(APIView):
                             content = spec_instance.content,
                             bill = bill, 
                             spec = spec_instance,
-                            money = number * price 
+                            money =   price 
                         ) 
                         if subject == "":
                             subject =  specname
                         else:
                             subject += ","+ specname
-                bill.subject = subject
-                
+                    elif billtype == 0:
+                        if spec_instance.number < number:
+                            # 库存不足，订单提交失败
+                            bill.delete()
+                            result['msg'] = spec_instance.name + "库存不足"
+                            return HttpResponse(json.dumps(result), content_type="application/json")
+                        else:
+                            # 先不减库存，redis中减库存 
+                            if bill.ordertype == bill.COIN:
+                                # 如果是积分订单，则price存的是积分数量
+                                price = spec_instance.coin
+                            else:
+                                price = spec_instance.price
+                            
+                            if billtype == bill.HOMESTAY:
+                                # 
+                                specname = datetime.strftime(spec_instance.date, settings.DATEFORMAT)
+                            else:
+                                specname = spec_instance.name
+
+                            BillSpec.objects.create(
+                                number = number,
+                                name = specname,
+                                price = price,
+                                title = spec_instance.product.title,
+                                picture = spec_instance.product.picture,
+                                content = spec_instance.content,
+                                bill = bill, 
+                                spec = spec_instance,
+                                money = number * price 
+                            ) 
+                            if subject == "":
+                                subject =  specname
+                            else:
+                                subject += ","+ specname
+                if billtype == 2:
+                    # 租车不用库存管理 
+                    bill.status = bill.NON_PAYMENT
+                bill.subject = subject 
                 bill.save()
-                
-                # 存入redis队列
-                myredis = RedisSubscri()
-                redisconn = myredis.getconn()
-                # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
-                redisconn.lpush("bills", bill.uuid+",1") # 发布到队列中
-                print(myredis.publish("consumer", "home_stay_bills")) # 通知订阅者进行消费，更新库存
+
+                if billtype == 0:
+                    # 存入redis队列
+                    myredis = RedisSubscri()
+                    redisconn = myredis.getconn()
+                    # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
+                    redisconn.lpush("bills", bill.uuid+",1") # 发布到队列中
+                    print(myredis.publish("consumer", "home_stay_bills")) # 通知订阅者进行消费，更新库存
 
                 result['status'] = SUCCESS
                 result['msg'] = str(bill.uuid)
