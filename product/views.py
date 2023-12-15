@@ -245,17 +245,18 @@ class ProductView(APIView):
             recommend_prodcut = request.GET['recommend_prodcut'].strip()
             if int(recommend_prodcut) == 1: 
                 kwargs['recommend'] = 1
- 
-        if 'category' in request.GET: 
-            category = request.GET['category'].strip()
-            if category != "-1":
-                try:
-                    category = Category.objects.get(id=category)
-                    kwargs['category'] = category
-                except Category.DoesNotExist:
-                    result['status'] = SUCCESS
-                    result['msg'] = '商品分类不存在'
-                    return HttpResponse(json.dumps(result), content_type="application/json")
+        
+
+        sub = []
+        qfilter = None
+        if 'category' in request.GET:
+            categoryid = request.GET['category'].strip() 
+            sub = list(Category.objects.filter(parent__id = categoryid).values("name", "id"))
+            if len(sub) > 0: 
+                qfilter = Q(category__id = categoryid) | Q(category__parent__id = categoryid)
+            else:
+                kwargs['category__id'] = categoryid
+
  
         if 'mine' in request.GET:
             kwargs['user'] = user
@@ -273,10 +274,18 @@ class ProductView(APIView):
         else:
             page = 0
             pagenum = settings.PAGE_NUM
-
-        products = Product.objects.filter(**kwargs)[page*pagenum: (page+1)*pagenum] 
-        total = Product.objects.filter(**kwargs).count()
-
+        
+        if qfilter is None:
+            products = Product.objects.filter(
+                **kwargs).order_by("-date")[page*pagenum: (page+1)*pagenum] 
+            total = Product.objects.filter(**kwargs).count()
+        else:
+            products = Product.objects.filter(
+                Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
+            total =  Product.objects.filter(
+                Q(**kwargs), qfilter).count()
+            
+        
         result_list = []
         if len(producttypes) > 0:
             # 普通商品
