@@ -244,7 +244,7 @@ class ProductView(APIView):
             category = request.GET['category'].strip()
             if category != "-1":
                 try:
-                    category = Category.objects.get(name=category)
+                    category = Category.objects.get(id=category)
                     kwargs['category'] = category
                 except Category.DoesNotExist:
                     result['status'] = SUCCESS
@@ -321,7 +321,7 @@ class ProductView(APIView):
               
             product = editData(product, data, request)
             
-      
+            product.producttype = category.producttype 
             product.user = user
             product.content = content
             product.title = title 
@@ -403,6 +403,7 @@ class ProductView(APIView):
                     return HttpResponse(json.dumps(result), content_type="application/json")
             
             product = editData(product, data, request)
+            product.producttype = product.category.categorytype 
             product.save()
 
             if 'tags' in data: # 添加标签

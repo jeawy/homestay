@@ -38,14 +38,6 @@ def editData(product, data, request):
         turns = data['turns'].strip()
         product.turns = turns 
     
-    if 'producttype' in data:
-        producttype = data['producttype'].strip()
-        product.producttype = producttype 
-    
-    if 'producttype' in data:
-        producttype = data['producttype'].strip()
-        product.producttype = producttype 
-    
     if 'cardtype' in data:
         cardtype = data['cardtype'].strip()
         product.cardtype = cardtype 
@@ -214,9 +206,7 @@ def addExtra(product, data):
               
             ExtraItems.objects.create(product = product, price = price, name = name, remark = remark)
 
- 
-
-
+  
 
 def addSpecs(product, data):
     if 'specifications' in data:
@@ -295,9 +285,7 @@ def addSpecs(product, data):
             Specifications.objects.create(product = product,number = number, \
                 name = name, price = price, coin = coin, content = content)
 
-
  
-
 def setHomestayPrice(product, pricemode):
     # 设置民宿的价格, 如果product不是民宿，则会直接跳过 
     product = Product.objects.get(uuid = product.uuid)
@@ -394,9 +382,7 @@ def setHomestayPrice(product, pricemode):
                 else:
                     print("no price2")
 
-
-
-
+ 
 def specifications_infos_lst(specs):
     # 获取商品规格详情
     specifications_infos = []
@@ -594,6 +580,7 @@ def get_single_product(product, detail = False):
         "specifications":specifications_lst,
         "purchase_way":purchase_way,
         "lighlight" : product.lighlight,  
+        "extras" :list( product.extra_products.all().values("id", "name", "price", "remark")),
         "tags" : list(product.tags.all().values("id", "name")),
     }
 

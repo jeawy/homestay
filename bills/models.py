@@ -97,7 +97,7 @@ class BillSpec(models.Model):
     money = models.FloatField(default=9999999.99)   
 
     # 购买的是购物卡的话，这个字段保存的是购物卡
-    card = models.ForeignKey(Card, on_delete=models.PROTECT, null = True, unique=True)
+    card = models.OneToOneField(Card, on_delete=models.PROTECT, null = True )
 
     def purchase_way_list(self):
         return [Specifications.COIN, Specifications.CASH,
