@@ -192,6 +192,8 @@ def addExtra(product, data):
                 except ValueError:
                     logger.error(traceback.format_exc())
                     continue
+                except TypeError:
+                    continue
             
          
             # 获取名称
@@ -201,8 +203,11 @@ def addExtra(product, data):
                 logger.error(traceback.format_exc())
                 continue
              
-            
-            remark = extra['remark']
+            try:
+                remark = extra['remark']
+            except Exception:
+                pass
+                remark = ""
               
             ExtraItems.objects.create(product = product, price = price, name = name, remark = remark)
 

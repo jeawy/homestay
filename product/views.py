@@ -60,6 +60,7 @@ class ProductAnonymousView(View):
         if 'title' in request.GET:
             title = request.GET['title'].strip()
             kwargs['title__icontains'] = title
+
         sub = []
         qfilter = None
         if 'categoryid' in request.GET:
@@ -79,7 +80,7 @@ class ProductAnonymousView(View):
         producttype = 0  
         if 'producttype' in request.GET:
             producttype = request.GET['producttype'].strip()
-        kwargs['producttype'] = producttype
+        
           
         if 'latest' in request.GET:
             # 获取最新产品
@@ -221,10 +222,15 @@ class ProductView(APIView):
             kwargs['title__icontains'] = title
         
         producttype = 0  
+        producttypes = []
         if 'producttype' in request.GET:
             producttype = int(request.GET['producttype'].strip())
 
-        kwargs['producttype'] = producttype
+        if 'producttypes' in request.GET:
+            producttypes = request.GET['producttypes'].split(",")
+            kwargs['producttype__in'] = producttypes
+        else: 
+            kwargs['producttype'] = producttype
          
         
         if 'selling_prodcut' in request.GET:
@@ -272,12 +278,15 @@ class ProductView(APIView):
         total = Product.objects.filter(**kwargs).count()
 
         result_list = []
-        if producttype == 0:
-            # 民宿列表
-            result_list = homestay_infos_lst(products, admin=admin)
-        else:
+        if len(producttypes) > 0:
             # 普通商品
             result_list = product_infos_lst(products, detail= False)
+        else:
+            if producttype == 0 or producttypes == [1, 10]:
+                # 民宿列表
+                result_list = homestay_infos_lst(products, admin=admin)
+            else:
+                result_list = product_infos_lst(products, detail= False)
 
         result['status'] = SUCCESS
         result['msg'] = {
@@ -321,7 +330,7 @@ class ProductView(APIView):
               
             product = editData(product, data, request)
             
-            product.producttype = category.producttype 
+            product.producttype = category.categorytype 
             product.user = user
             product.content = content
             product.title = title 

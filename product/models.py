@@ -163,7 +163,7 @@ class Specifications(models.Model):
     # 虚拟币数量
     coin = models.IntegerField(null=True,default=None)
     # 商品规格描述
-    content = models.CharField(max_length=1024,null=False)
+    content = models.CharField(max_length=1024,null=True)
     # 商品外键
     product = models.ForeignKey(Product, on_delete=models.CASCADE, 
                                 related_name='product_specifications' )
