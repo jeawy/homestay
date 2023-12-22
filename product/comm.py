@@ -491,7 +491,24 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         product_dict['categoryid'] = product.category.id
     else:
         product_dict['categoryid'] =  ""
-        
+
+    if product.coupon:
+        product_dict['coupon'] =  {
+            "uuid":product.coupon.uuid,
+            "name":product.coupon.name,
+            "coupontype":product.coupon.coupontype,
+            "start":time.mktime (product.coupon.start.timetuple()) if product.coupon.start else "" ,
+            "end":time.mktime (product.coupon.end.timetuple()) if product.coupon.end else "" ,
+            "rules":product.coupon.rules,
+            "discount":product.coupon.discount,
+            "top_money":product.coupon.top_money,
+            "reduce_money":product.coupon.reduce_money,
+            "limit":product.coupon.limit,
+        }
+    else:
+        product_dict['coupon'] =  None
+
+
     if date is None:
         # 获取今天的价格
         date = datetime.today().date()
@@ -588,6 +605,22 @@ def get_single_product(product, detail = False):
         "extras" :list( product.extra_products.all().values("id", "name", "price", "remark")),
         "tags" : list(product.tags.all().values("id", "name")),
     }
+    
+    if product.coupon:
+        product_dict['coupon'] =  {
+            "uuid":product.coupon.uuid,
+            "name":product.coupon.name,
+            "coupontype":product.coupon.coupontype,
+            "start":time.mktime (product.coupon.start.timetuple()) if product.coupon.start else "" ,
+            "end":time.mktime (product.coupon.end.timetuple()) if product.coupon.end else "" ,
+            "rules":product.coupon.rules,
+            "discount":product.coupon.discount,
+            "top_money":product.coupon.top_money,
+            "reduce_money":product.coupon.reduce_money,
+            "limit":product.coupon.limit,
+        }
+    else:
+        product_dict['coupon'] =  None
 
     if product.category:
         product_dict['categoryid'] = product.category.id

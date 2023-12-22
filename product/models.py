@@ -8,6 +8,7 @@ from category.models import Category
 from tags.models import Tags 
 from django.conf import settings
 import os
+from coupon.models import Coupon
 
 
 class Product(BaseDate):
@@ -24,7 +25,11 @@ class Product(BaseDate):
 
     # 视频路径 
     videopath = models.CharField(max_length=256, null=True)
+    
+    # 优惠券
+    coupon = models.ForeignKey(Coupon, null=True, on_delete=models.SET_NULL)
 
+    
     # 内容描述
     content = models.TextField(null=True)
     # 轮播图

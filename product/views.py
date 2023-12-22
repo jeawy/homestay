@@ -14,6 +14,7 @@ from property import settings
 from property.code import SUCCESS, ERROR 
 from product.models import Product, Specifications, Category 
 import uuid
+from coupon.models import Coupon
 from tags.comm import add 
 from product.comm import product_infos_lst, specifications_infos_lst,\
 editData, get_single_product, addSpecs, addExtra, setHomestayPrice, homestay_infos_lst,\
@@ -80,6 +81,12 @@ class ProductAnonymousView(View):
         producttype = 0  
         if 'producttype' in request.GET:
             producttype = request.GET['producttype'].strip()
+        producttypes = []
+        if 'producttypes' in request.GET:
+            producttypes = request.GET['producttypes'].split(",")
+            kwargs['producttype__in'] = producttypes
+        else: 
+            kwargs['producttype'] = producttype
         
           
         if 'latest' in request.GET:
@@ -101,16 +108,19 @@ class ProductAnonymousView(View):
         else:
             page = 0
             pagenum = settings.PAGE_NUM
-
+        
+    
         if qfilter is None:
             products = Product.objects.filter(
                 **kwargs).order_by("-date")[page*pagenum: (page+1)*pagenum] 
         else:
-            products = Product.objects.filter(
-                Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
+            products = Product.objects.filter( Q(**kwargs), qfilter).order_by("-date")[page*pagenum: (page+1)*pagenum]
             
         result['status'] = SUCCESS
-        if int(producttype) == 0  or int(producttype) == 2:
+        if len(producttypes) > 0:
+            # 普通商品
+            result['msg'] = product_infos_lst(products, detail= False) 
+        elif int(producttype) == 0  or int(producttype) == 2:
             result['msg'] = homestay_infos_lst(products, date=date)
         else:
             result['msg'] = product_infos_lst(products, detail = False)
@@ -251,11 +261,12 @@ class ProductView(APIView):
         qfilter = None
         if 'category' in request.GET:
             categoryid = request.GET['category'].strip() 
-            sub = list(Category.objects.filter(parent__id = categoryid).values("name", "id"))
-            if len(sub) > 0: 
-                qfilter = Q(category__id = categoryid) | Q(category__parent__id = categoryid)
-            else:
-                kwargs['category__id'] = categoryid
+            if categoryid != "-1" and int(categoryid) != -1:
+                sub = list(Category.objects.filter(parent__id = categoryid).values("name", "id"))
+                if len(sub) > 0: 
+                    qfilter = Q(category__id = categoryid) | Q(category__parent__id = categoryid)
+                else:
+                    kwargs['category__id'] = categoryid
 
  
         if 'mine' in request.GET:
@@ -382,7 +393,6 @@ class ProductView(APIView):
         # 修改商品
         result = {} 
         data = request.POST
-        user = request.user
         if 'uuid' in data:
             uuid = data['uuid'] 
             try:
@@ -445,7 +455,25 @@ class ProductView(APIView):
                 #              1 覆盖日历所有价格
                 pricemode = int(data['pricemode'].strip())
                 setHomestayPrice(product, pricemode)
+
+
+            if 'couponuuid' in data:
+                # 优惠券
+                couponuuid =  data['couponuuid'].strip() 
+                try:
+                    coupon = Coupon.objects.get(uuid = couponuuid)
+                    product.coupon = coupon
+                    product.save()
+                except Coupon.DoesNotExist:
+                    result['status'] = ERROR
+                    result['msg'] = '商品信息已保存, 但优惠券没有绑定，优惠券不存在'
+
+            if 'removecouponuuid' in data:
+                # 移除优惠券
+                product.coupon = None
+                product.save()
             
+ 
             result['status'] = SUCCESS
             result['msg'] = '修改成功'
         else:
