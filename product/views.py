@@ -38,16 +38,27 @@ class ProductAnonymousView(View):
         if 'uuid' in request.GET:
             # 获得单个商品的详细信息
             productuuid = request.GET['uuid'] 
+             
             try:
                 product = Product.objects.get(uuid = productuuid) 
-                if product.producttype == 0  or product.producttype == 2:
-                    msg = get_single_homestay_product(product, date=date, detail=True ) 
+                if 'wifi' in request.GET:
+                    # 获取房屋的wifi信息
+                    result = { 
+                        "status":SUCCESS,
+                        "msg":{
+                            "wifiname":product.wifiname,
+                            "wifipwd":product.wifipwd,
+                        }
+                    }
                 else:
-                    msg = get_single_product(product, detail=True)
-                result = { 
-                    "status":SUCCESS,
-                    "msg":msg
-                }
+                    if product.producttype == 0  or product.producttype == 2:
+                        msg = get_single_homestay_product(product, date=date, detail=True ) 
+                    else:
+                        msg = get_single_product(product, detail=True)
+                    result = { 
+                        "status":SUCCESS,
+                        "msg":msg
+                    }
             except Product.DoesNotExist:
                 result = { 
                     "status":ERROR,

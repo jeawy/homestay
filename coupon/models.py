@@ -2,6 +2,7 @@
 from django.db import models
 from basedatas.models import BaseDate
 from appuser.models import AdaptorUser as User
+from category.models import Category
 
 
 class Coupon(BaseDate):
@@ -31,6 +32,12 @@ class Coupon(BaseDate):
     # 使用规则
     rules = models.TextField(null = True)
     
+    # 某个类别中全部商品都可以用的，而且可以累加的
+    # 比如外卖商品，10个商品合计起来用一个优惠券
+    # 全品类的优惠券可以通过领取，或者定向发放模式赠与
+    categories = models.ManyToManyField(Category, related_name = "coupon_categories" )
+
+
     # 折扣：不能大于10，不能小于1
     discount = models.FloatField(null=True)
     

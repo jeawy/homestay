@@ -7,25 +7,21 @@ from rest_framework.views import APIView
 from coupon.models import Coupon
 from property.code import SUCCESS, ERROR
 from django.http import HttpResponse
+from category.models import Category
+from coupon.comm import get_dict
 
 
 class CouponBuyerView(APIView):
     def get(self, request):
         #我的优惠券
         user = request.user  
-        coupons = Coupon.objects.filter(status = Coupon.PUBLISHED, buyers = user).values(
-            "uuid", "name", "coupontype", "start", "end", "rules", "discount", 
-            "top_money", "reduce_money", "limit"
-        )
+        coupons = Coupon.objects.filter(status = Coupon.PUBLISHED, buyers = user) 
+        coupons_ls = []
         for coupon in coupons:
-            if coupon['start']:
-                coupon['start'] =  time.mktime(coupon['start'].timetuple())
-            
-            if coupon['end']:
-                coupon['end'] =  time.mktime(coupon['end'].timetuple())
+            coupons_ls.append(get_dict(coupon))
         result = {
             "status" :SUCCESS,
-            "msg" : list(coupons)
+            "msg" : coupons_ls
         }
         return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -61,20 +57,27 @@ class CouponBuyerView(APIView):
 class CoupinAnonynousView(View):
     def get(self, request):
         # 匿名获取优惠券
+        kwargs = {
+            "status" : Coupon.PUBLISHED
+        }
+        if 'categoryid' in request.GET:
+            # 按品类查询优惠券
+            categoryid = request.GET['categoryid']
+            categories = list(Category.objects.filter(parent__id = categoryid).values(   "id"   ))
+            categoryid_ls = set([item['id'] for item in categories])
+            categoryid_ls.add(categoryid)
+            kwargs['categories__id__in'] = categoryid_ls
         
-        coupons = Coupon.objects.filter(status = Coupon.PUBLISHED).values(
-            "uuid", "name", "coupontype", "start", "end", "rules", "discount", 
-            "top_money", "reduce_money", "limit"
-        )
+        print(kwargs)
+        coupons = Coupon.objects.filter( **kwargs ).distinct("uuid") 
+  
+        coupons_ls = []
         for coupon in coupons:
-            if coupon['start']:
-                coupon['start'] =  time.mktime(coupon['start'].timetuple())
-            
-            if coupon['end']:
-                coupon['end'] =  time.mktime(coupon['end'].timetuple())
+            coupons_ls.append(get_dict(coupon))  
+
         result = {
             "status" :SUCCESS,
-            "msg" : list(coupons)
+            "msg" : coupons_ls
         }
         return HttpResponse(json.dumps(result), content_type="application/json")
 

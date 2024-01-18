@@ -102,6 +102,10 @@ class Product(BaseDate):
     
     # 最大允许入住人数
     maxlivers = models.PositiveSmallIntegerField(default=4)
+    
+    # wifi名字和密码
+    wifiname = models.CharField(max_length= 100, null= True)
+    wifipwd = models.CharField(max_length= 100, null= True)
     class Meta:
         default_permissions = ()
         ordering = ['-date']

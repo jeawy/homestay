@@ -3,7 +3,9 @@ from datetime import datetime
 import pdb
 import time
 import json
+from category.models import Category
 from django.conf import settings
+from coupon.comm import get_dict
 from django.http import HttpResponse
 from django.views import View
 from rest_framework.views import APIView
@@ -26,26 +28,9 @@ class CouponAdminView(APIView):
         if 'uuid' in  request.GET:
             couponuuid = request.GET['uuid']
             try:
-                coupon = Coupon.objects.get(user = user, uuid = couponuuid)
-                
+                coupon = Coupon.objects.get(user = user, uuid = couponuuid) 
                 result['status'] = SUCCESS 
-                result['msg'] =  {
-                    "uuid":coupon.uuid,
-                    "date":time.mktime(coupon.date.timetuple()),
-                    "name":coupon.name,
-                    "status":coupon.status,
-                    "coupontype":coupon.coupontype,
-                    "start":time.mktime(coupon.start.timetuple()),
-                    "end":time.mktime(coupon.end.timetuple()), 
-                    "rules":coupon.rules,
-                    "limit":coupon.limit,
-                    "content" : get_content(coupon),
-                    "discount":coupon.discount,
-                    "top_money":coupon.top_money,
-                    "reduce_money":coupon.reduce_money,
-                    "extras" :coupon.extras
-                } 
-                
+                result['msg'] =  get_dict(coupon) 
             except Coupon.DoesNotExist:
                 result['msg'] = "优惠券不存在"
                 result['status'] = ERROR
@@ -72,33 +57,16 @@ class CouponAdminView(APIView):
 
         total = Coupon.objects.filter(**kwargs).count() 
 
-        coupons = list(Coupon.objects.filter(**kwargs).values(
-            "uuid",
-            "date",
-             "name", "status",
-             "coupontype","start",
-            "end", "rules",
-             "discount",
-             "limit",
-            "top_money", "reduce_money", "extras" 
-        )[page*pagenum: (page+1)*pagenum])
+        coupons = Coupon.objects.filter(**kwargs) [page*pagenum: (page+1)*pagenum] 
+        coupons_ls = []
         for coupon in coupons:
-            coupon['date'] = time.mktime(coupon['date'].timetuple())
-
-            if coupon['start']:
-                coupon['start'] = time.mktime(coupon['start'].timetuple())
-
-            if coupon['end']:
-                coupon['end'] = time.mktime(coupon['end'].timetuple())
-            
-            if coupon['extras']:
-                coupon['extras'] = json.loads(coupon['extras'])
+            coupons_ls.append(get_dict(coupon))
 
         result = {}
         result['status'] = SUCCESS
         result['msg'] = {
                             "total": total,
-                            "coupons": coupons
+                            "coupons": coupons_ls
                         }  
         return HttpResponse(json.dumps(result), content_type='application/json')  
     
@@ -199,6 +167,8 @@ class CouponAdminView(APIView):
                 limit = data['limit']
                 coupon.limit = limit
             
+            
+ 
             if 'extras' in data:
                 extras = data['extras']
                 coupon.extras = extras
@@ -208,6 +178,19 @@ class CouponAdminView(APIView):
                 coupon.status = status
             
             coupon.save()
+
+            if 'categoryids' in data:
+                categoryids = data['categoryids'].split(",")
+                for categoryid in categoryids:
+                    print(categoryid)
+                    if categoryid:
+                        try:
+                            category = Category.objects.get(id = categoryid)
+                            coupon.categories.add(category)
+                        except Category.DoesNotExist:
+                            pass
+                
+
             result['status'] = SUCCESS
             result['msg'] = "创建成功"
         else:
@@ -274,7 +257,19 @@ class CouponAdminView(APIView):
                             status = data['status']
                             coupon.status = status
 
-
+                        if 'categoryids' in data:
+                            categoryids = data['categoryids'].split(",")
+                            coupon.categories.clear() 
+                            for categoryid in categoryids:
+                                
+                                if categoryid:
+                                    print(categoryid)
+                                    try:
+                                        category = Category.objects.get(id = categoryid)
+                                        print(category)
+                                        coupon.categories.add(category)
+                                    except Category.DoesNotExist:
+                                        print(888)
                         if len(name) > 56:
                             result['msg'] = "标题不能超过28个字"
                             return HttpResponse(json.dumps(result), content_type="application/json")

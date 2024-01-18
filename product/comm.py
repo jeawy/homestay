@@ -109,6 +109,14 @@ def editData(product, data, request):
     if 'customer_notice' in data:
         customer_notice = data['customer_notice'].strip()
         product.customer_notice = customer_notice
+    
+    if 'wifiname' in data:
+        wifiname = data['wifiname'].strip()
+        product.wifiname = wifiname 
+    
+    if 'wifipwd' in data:
+        wifipwd = data['wifipwd'].strip()
+        product.wifipwd = wifipwd 
      
     if 'mainpic' in request.FILES:
         # 获取主图
