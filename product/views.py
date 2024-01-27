@@ -27,6 +27,16 @@ class ProductAnonymousView(View):
         # 查看 
         result = {"status": ERROR}
 
+        if 'addresses'  in request.GET:
+            # 快速获取民宿地址，方便下单时候用户选择
+            result = {
+                "status": SUCCESS,
+                "msg":list(Product.objects.filter(
+                    ready = 1, 
+                    producttype = 0).values("uuid", "title", "address"))
+            }   
+            return HttpResponse(json.dumps(result), content_type="application/json")
+
         date = None
         if 'date' in request.GET:
             date = request.GET['date'].strip()

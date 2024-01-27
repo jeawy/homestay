@@ -344,6 +344,7 @@ class OrderView(APIView):
                 if int(addressid) == -1: # 或者不需要地址，如民宿
                     # 自提
                     delivery_way = 1
+                    
                 else: 
                     delivery_way = 0
                     try:
@@ -364,6 +365,15 @@ class OrderView(APIView):
                     bill.receiver_address =address.address  + address.detail
                     bill.receiver_phone = address.phone
                     bill.receiver = address.receiver
+                else:
+                    # 上门派送
+                    if 'address' in data:
+                        addresstxt = data['address']
+                        addresstxt = json.loads(addresstxt)
+                        bill.receiver_address = addresstxt['address'] 
+                        bill.receiver_phone = addresstxt['phone'] 
+                        bill.receiver = addresstxt['username'] 
+
                 bill.subject = subject
                 
                 if 'ordertype' in data:
