@@ -31,6 +31,7 @@ class Bills(PayBase):
     REFUND = 5 #  已退款
     NOTENOUGH = 6 #  库存不足
     UNUSUAL = -1  # 异常订单，例如库存不足等
+    CLOSED = 9 # 订单已关闭
     status = models.SmallIntegerField(default = UNUSUAL)
     
     

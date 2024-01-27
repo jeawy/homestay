@@ -33,7 +33,7 @@ def getbill(bill):
             "spec": list(BillSpec.objects.filter(bill = bill).values(
                 "number",
                 "name", 
-                "spec__gift__uuid",
+                "spec__product__uuid",
                 "picture",
                 "title",
                 "price",

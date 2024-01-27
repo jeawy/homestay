@@ -222,8 +222,7 @@ class WeixinPay(object):
             'payer': {
                 'openid': openid
             }
-        }
-        print(data)
+        } 
         if attach:
             data.update({'attach': attach})
         if expire_time:
