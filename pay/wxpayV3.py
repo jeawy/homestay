@@ -49,16 +49,17 @@ class WeixinPay(object):
     def __init__(self,  sub_mch_id=None, md5=False):
         # md5是否使用MD5加密，uniapp暂时只支持md5加密
         self.key = None
+       
         if sub_mch_id is None:
             # 直接到平台
             mch_id = settings.WEIXINPAY['mch_id']
-            app_id = settings.WEIXINPAY['app']['app_id']
+            app_id = settings.WEIXINPAY['xiaochengxu']['app_id']
             api_v3_key = settings.WEIXINPAY['api_v3_key'] 
             mch_cert_no = settings.WEIXINPAY['serial_no'] 
             notify_url = settings.WEIXINPAY['notifyurl']
             cert_dir = settings.WEIXINPAY['cert_dir']
         else:
-            app_id = settings.WEIXINPAY_SUB_MCH['web']['app_id']  # 公众账号appid
+            app_id = settings.WEIXINPAY_SUB_MCH['xiaochengxu']['app_id']  # 公众账号appid
             mch_id = settings.WEIXINPAY_SUB_MCH['mch_id']  # 商户号
             # key设置路径：微信商户平台(pay.weixin.qq.com) -->账户设置 -->API安全 -->密钥设置
             self.key = settings.WEIXINPAY_SUB_MCH['apikey']  
@@ -222,7 +223,7 @@ class WeixinPay(object):
                 'openid': openid
             }
         }
-        
+        print(data)
         if attach:
             data.update({'attach': attach})
         if expire_time:

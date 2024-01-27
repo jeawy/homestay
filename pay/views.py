@@ -72,6 +72,8 @@ class PayView(APIView):
                 if trade_type=="wechatMp":
                     # 小程序 支付 
                     openid = request.GET['openid']  
+                    # 支付到子商户中
+                    
                     # 支付到平台账户中 
                     wxpay = WeixinPay(md5=True)
                     wxresult = wxpay.unified_order(
@@ -81,14 +83,12 @@ class PayView(APIView):
                         amount=int(money * 100),
                         desc=subject,
                         notify_url = settings.WEIXINPAY['notifyurl']
-                    )
-                     
+                    ) 
+                    print(wxresult)
                     content['msg'] = wxresult
                 else:
-                    # APP 中支付 
-                     
-                    wxpay = WeixinPay( ) 
-                    
+                    # APP 中支付  
+                    wxpay = WeixinPay( )  
                     wxresult = wxpay.unified_order_app(
                         order_id=billno,
                         # 和支付宝支付不同，微信支付是以分为单位，所以不能传入小数，要支付的金额乘以100作为标价金额参数即可。

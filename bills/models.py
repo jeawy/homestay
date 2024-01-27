@@ -78,16 +78,16 @@ class BillSpec(models.Model):
     # 数量
     number = models.IntegerField()
     # 名称
-    name = models.CharField(max_length=200,null=False)
+    name = models.CharField(max_length=200 )
     # 图片
     picture = models.CharField(max_length=200,null=True)
     # 标题
-    title = models.CharField( null=True,max_length=200,)
+    title = models.CharField( null=True,max_length=200 )
     # 单价
-    price = models.FloatField( null=True,default=None)
+    price = models.FloatField( null=True )
     
     # 规格描述
-    content = models.CharField(max_length=1024,null=False)
+    content = models.CharField(max_length=1024 )
     # 外键
     bill = models.ForeignKey(Bills, on_delete=models.CASCADE  )
 

@@ -418,7 +418,7 @@ class OrderView(APIView):
                             price = price,
                             title = spec_instance.product.title,
                             picture = spec_instance.product.picture,
-                            content = spec_instance.content,
+                            content = spec['attr_val'] + spec['title'],
                             bill = bill, 
                             spec = spec_instance,
                             money =   price 
@@ -427,7 +427,7 @@ class OrderView(APIView):
                             subject =  specname
                         else:
                             subject += ","+ specname
-                    elif billtype == 0:
+                    else:
                         if spec_instance.number < number:
                             # 库存不足，订单提交失败
                             bill.delete()
@@ -453,7 +453,7 @@ class OrderView(APIView):
                                 price = price,
                                 title = spec_instance.product.title,
                                 picture = spec_instance.product.picture,
-                                content = spec_instance.content,
+                                content = spec['attr_val'] + spec['title'],
                                 bill = bill, 
                                 spec = spec_instance,
                                 money = number * price 
@@ -468,7 +468,7 @@ class OrderView(APIView):
                 bill.subject = subject 
                 bill.save()
 
-                if billtype == 0:
+                if billtype == 0 or billtype == 10:
                     # 存入redis队列
                     myredis = RedisSubscri()
                     redisconn = myredis.getconn()

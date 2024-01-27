@@ -24,17 +24,16 @@ class PayToolUtil(object):
         # app 表示在APP中的支付
         # ========支付相关配置信息===========
         self.way = way
-        self.sub_mch_id = None
+        self.sub_mch_id = settings.WEIXINPAY_SUB_MCH['sub_mch_id']
         self.app = app
         if way == "sub":
             if app:
                 self._APP_ID = settings.WEIXINPAY_SUB_MCH['app']['app_id']  # 公众账号appid
             else:
-                self._APP_ID = settings.WEIXINPAY_SUB_MCH['web']['app_id']  # 公众账号appid
+                self._APP_ID = settings.WEIXINPAY_SUB_MCH['xiaochengxu']['app_id']  # 公众账号appid
             self._MCH_ID = settings.WEIXINPAY_SUB_MCH['mch_id']  # 商户号
             # key设置路径：微信商户平台(pay.weixin.qq.com) -->账户设置 -->API安全 -->密钥设置
-            self._API_KEY = settings.WEIXINPAY_SUB_MCH['apikey'] 
-            self.sub_mch_id = sub_mch_id 
+            self._API_KEY = settings.WEIXINPAY_SUB_MCH['apikey']  
         else:
             self._APP_ID = settings.WEIXINPAY['web']['app_id']  # 公众账号appid
             self._MCH_ID = settings.WEIXINPAY['mch_id']  # 商户号
@@ -48,7 +47,7 @@ class PayToolUtil(object):
         
         self._UFDODER_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder"
         self._QUERY_URL = "https://api.mch.weixin.qq.com/pay/orderquery"
-        self._NOTIFY_URL = "47.95.239.228:8000/pay/weixin/"#"your Ip：端口／处理方法路径"  # 微信支付结果回调的处理方法
+        self._NOTIFY_URL = settings.DOMAINHOST + "api/pay/weixin/"#"your Ip：端口／处理方法路径"  # 微信支付结果回调的处理方法
         
         
 
