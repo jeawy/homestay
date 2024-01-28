@@ -465,10 +465,8 @@ class OrderView(APIView):
                             money =   price 
                         ) 
                         totalmoney += price
-                        if subject == "":
-                            subject =  specname
-                        else:
-                            subject += ","+ specname
+                        
+                        subject = "租车"
                     elif billtype == Bills.HOMESTAY:
                         # 民宿下单
                         specname = datetime.strftime(spec_instance.date, '%m月%d号') 
@@ -490,6 +488,7 @@ class OrderView(APIView):
                                 money = price 
                             ) 
                             totalmoney += price
+                            subject = "民宿订单"
                     else:
                         if spec_instance.number < number:
                             # 库存不足，订单提交失败
