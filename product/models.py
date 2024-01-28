@@ -168,18 +168,18 @@ class Specifications(models.Model):
     #  民宿用date字段 
     date = models.DateField(null= True)  # 注意 一天不能有两个价格
     # 商品单价
-    price = models.DecimalField(max_digits=8, decimal_places=2,null=True,default=None)
+    price = models.FloatField( null=True )
     # 虚拟币数量
-    coin = models.IntegerField(null=True,default=None)
+    coin = models.IntegerField(null=True )
     # 商品规格描述
     content = models.CharField(max_length=1024,null=True)
     # 商品外键
     product = models.ForeignKey(Product, on_delete=models.CASCADE, 
                                 related_name='product_specifications' )
     # 已经兑换的数量 = 积分兑换 +积分加现金 + 资格兑换的数量
-    conversion_num = models.IntegerField(null=True,default=0)
+    conversion_num = models.IntegerField( default=0)
     # 交易量  = 现金购买 + 积分兑换 +积分加现金 + 资格兑换的数量
-    business_num = models.IntegerField(null=True,default=0)
+    business_num = models.IntegerField( default=0)
     # 购买方式 "1,2,3,4"
     COIN = 1  # 1:支持积分
     CASH = 2  # 2:支持现金

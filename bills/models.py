@@ -5,7 +5,7 @@ from appuser.models import AdaptorUser as User
 from product.models import Specifications, ExtraItems
 from address.models import Address
 from card.models import Card
-
+from coupon.models import Coupon
 
 class Bills(PayBase):
     """
@@ -34,7 +34,12 @@ class Bills(PayBase):
     CLOSED = 9 # 订单已关闭
     status = models.SmallIntegerField(default = UNUSUAL)
     
-    
+
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True)
+    # 优惠说明
+    coupontxt = models.CharField(max_length= 256, null = True)
+    # 优惠的金额
+    couponprice = models.FloatField(null=True)
     # 订单类型
     HOMESTAY = 0 
     CAR = 2

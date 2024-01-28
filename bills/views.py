@@ -17,6 +17,7 @@ from common.utils import get_final_date
 from pay.wxpayV3 import WeixinPay
 from property.code import SUCCESS,  ERROR
 from cart.models import Cart
+from coupon.models import Coupon
 from property.code import ZHIFUBAO, WEIXIN
 from bills.models import Bills, BillSpec, BillExstra
 from bills.comm import getbillno, getbill
@@ -174,6 +175,8 @@ class OrderView(APIView):
             try:
                 bill = Bills.objects.get(uuid = billuuid)
                 result['status'] = SUCCESS
+
+                '''
                 money = 0
                 specs = BillSpec.objects.filter(bill = bill)
                 gifttype = 0
@@ -191,12 +194,22 @@ class OrderView(APIView):
                     money = price__sum + float(money)
                 else:
                     money = float(money)
+                
+                if bill.coupon: # 减扣优惠情况
+                    if bill.coupon.coupontype == bill.coupon.DISCOUNT: 
+                        # 折扣券 
+                        money  = round( money  * bill.coupon.discount/10  , 2) 
+                    else:
+                        # 满减券：如满100减5元
+                        if money > bill.coupon.top_money:
+                            money  = money  - bill.coupon.reduce_money
+                '''             
 
                 result['msg'] = {
                     'status':bill.status,
                     'billno':bill.billno,
-                    'money':money,
-                    "gifttype":gifttype} 
+                    'money':bill.money,
+                    "gifttype":bill.billtype} 
             except Bills.DoesNotExist:
                 result['msg'] = "未找到订单信息"
             return HttpResponse(json.dumps(result), content_type="application/json")
@@ -395,9 +408,25 @@ class OrderView(APIView):
                 if 'phone' in data:
                     phone = data['phone'] 
                     bill.receiver_phone = phone
-                    
-                bill.save() 
 
+                bill.coupon = None
+                if 'couponuuid' in data:
+                    couponuuid = data['couponuuid']
+                    try:
+                        coupon = Coupon.objects.get(uuid = couponuuid )
+                        today = datetime.now().date()
+                        if today >= coupon.start and today <= coupon.end: 
+                            bill.coupon = coupon 
+                        else:
+                            result['msg'] = "使用了无效优惠券"
+                            return HttpResponse(json.dumps(result), content_type="application/json")
+   
+                    except Coupon.DoesNotExist:
+                        result['msg'] = "优惠券不存在"
+                        return HttpResponse(json.dumps(result), content_type="application/json")
+  
+                bill.save() 
+                totalmoney = 0 # 总金额
                 if 'extras' in data: 
                     extras = data['extras'] 
                     extras = json.loads(extras)
@@ -411,16 +440,18 @@ class OrderView(APIView):
                                 bill = bill, 
                                 extra = extraitem 
                             )  
+                            totalmoney += extraitem.price
                         except ExtraItems.DoesNotExist:
                             pass
+                
                         
                 for spec in specs:
                     number = spec['number']
                     spec_instance = Specifications.objects.get(id = spec['id'])
-                    if billtype == 2:
-                        # 租车不用库存管理 
-                        price = spec_instance.price 
-                        specname = datetime.strftime(spec_instance.date, settings.DATEFORMAT)+"租车"
+                    price = spec_instance.price 
+                    if billtype == Bills.CAR:
+                        # 租车不用库存管理  
+                        specname = datetime.strftime(spec_instance.date, '%m月%d号')+"租车"
                       
                         BillSpec.objects.create(
                             number = 1,
@@ -433,10 +464,32 @@ class OrderView(APIView):
                             spec = spec_instance,
                             money =   price 
                         ) 
+                        totalmoney += price
                         if subject == "":
                             subject =  specname
                         else:
                             subject += ","+ specname
+                    elif billtype == Bills.HOMESTAY:
+                        # 民宿下单
+                        specname = datetime.strftime(spec_instance.date, '%m月%d号') 
+                        if spec_instance.number < number:
+                            # 房屋已定完，订单提交失败
+                            bill.delete() 
+                            result['msg'] = specname + "无房"
+                            return HttpResponse(json.dumps(result), content_type="application/json")
+                        else:
+                            BillSpec.objects.create(
+                                number = 1,
+                                name = specname,
+                                price = price,
+                                title = spec_instance.product.title,
+                                picture = spec_instance.product.picture,
+                                content = specname,
+                                bill = bill, 
+                                spec = spec_instance,
+                                money = price 
+                            ) 
+                            totalmoney += price
                     else:
                         if spec_instance.number < number:
                             # 库存不足，订单提交失败
@@ -451,11 +504,7 @@ class OrderView(APIView):
                             else:
                                 price = spec_instance.price
                             
-                            if billtype == bill.HOMESTAY:
-                                # 
-                                specname = datetime.strftime(spec_instance.date, settings.DATEFORMAT)
-                            else:
-                                specname = spec_instance.name
+                            specname = spec_instance.name
 
                             BillSpec.objects.create(
                                 number = number,
@@ -468,13 +517,32 @@ class OrderView(APIView):
                                 spec = spec_instance,
                                 money = number * price 
                             ) 
+                            totalmoney += number * price
                             if subject == "":
                                 subject =  specname
                             else:
                                 subject += ","+ specname
+
                 if billtype == 2:
                     # 租车不用库存管理 
                     bill.status = bill.NON_PAYMENT
+                
+                if bill.coupon is not None:
+                    if bill.coupon.coupontype == bill.coupon.DISCOUNT: 
+                        # 折扣券 
+                        totalmoney  = round( totalmoney  * bill.coupon.discount/10, 2) 
+                        couponprice = round( totalmoney  * (1-bill.coupon.discount/10), 2) # 优惠金额
+                        bill.couponprice = couponprice
+                        bill.coupontxt = "{0}折优惠券:优惠金额:{1}".format(bill.coupon.discount, couponprice)
+                    else:
+                        # 满减券：如满100减5元
+                        if totalmoney > bill.coupon.top_money:
+                            totalmoney  = totalmoney  - bill.coupon.reduce_money 
+                            couponprice = bill.coupon.reduce_money  # 优惠金额
+                            bill.couponprice = couponprice
+                            bill.coupontxt = "满{0}减{1}优惠券:优惠金额:{2}".format(bill.coupon.top_money, bill.coupon.reduce_money, couponprice)
+                
+                bill.money = totalmoney
                 bill.subject = subject 
                 bill.save()
 
@@ -489,67 +557,7 @@ class OrderView(APIView):
                 result['status'] = SUCCESS
                 result['msg'] = str(bill.uuid)
             
-            
-            
-        elif 'webpay' in data  \
-            and 'orderuuid' in data and 'auth_code' in data:
-            # auth_code 扫码字符串
-            # 物业网页版支付 
-            orderuuid = data['orderuuid']
-            # 微信支付码规则：18位纯数字，以10、11、12、13、14、15开头 
-            # 支付宝支付码规则：25 - 30开头的长度为16~24位的数字，实际字符串长度以开发者获取的付款码长度为准
-            auth_code = data['auth_code']
-            payway = int(auth_code[:2])
-
-            if payway > 9 and payway < 16:
-                payway = WEIXIN
-            elif payway <= 30 and payway >= 25:
-                payway = ZHIFUBAO
-            else:
-                result['msg'] = "不支持的付款类型"
-                result['status'] = ERROR 
-                return HttpResponse(json.dumps(result), content_type="application/json")
-
-            try:
-                order = RoomFeeOrders.objects.get(uuid = orderuuid, 
-                        status = RoomFeeOrders.NON_PAYMENT)
-                if int(payway) == ZHIFUBAO:
-                    url = get_alipy_url(order.billno, order.money, order.subject)
-                    result['msg'] = { 
-                        "payway":payway,
-                        "orderno":order.billno
-                    } 
-                else:
-                    # 微信支付
-                    """
-                    kwargs = {}
-                    kwargs["order_id"] = order.billno
-                    kwargs["goodsName"] = order.subject
-                    kwargs['goodsPrice'] = order.money
-                    # 二维码地址
-                    # weixinpay_ctl = MainController() 
-                    # url = weixinpay_ctl.getWeChatQRCode( **kwargs)
-                    """
-                    # 直接支付到子商户中
-                    kwargs = {}
-                    kwargs["order_id"] = order.billno 
-                    kwargs['amount'] = order.money
-                    kwargs["desc"] = order.subject
-                    kwargs['auth_code'] = auth_code 
-                    wxpay = WeixinPay(sub_mch_id = sub_mch_id)
-                    payresult = wxpay.native_order( **kwargs)
-                    logger.debug(str(payresult))
-                    
-                    result['msg'] = { 
-                        "payway":payway, 
-                        "orderno":order.billno,
-                        "sub_mch_id":sub_mch_id
-                    }  
-                result['status'] = SUCCESS
-
-            except RoomFeeOrders.DoesNotExist:
-                result['msg'] = "未找到该订单"
-            
+             
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     def delete(self,request):

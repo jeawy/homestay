@@ -499,20 +499,22 @@ def get_single_homestay_product(product, date=None,  detail=False, admin = False
         product_dict['categoryid'] = product.category.id
     else:
         product_dict['categoryid'] =  ""
-
+    
+    today = datetime.now().date()
     if product.coupon:
-        product_dict['coupon'] =  {
-            "uuid":product.coupon.uuid,
-            "name":product.coupon.name,
-            "coupontype":product.coupon.coupontype,
-            "start":time.mktime (product.coupon.start.timetuple()) if product.coupon.start else "" ,
-            "end":time.mktime (product.coupon.end.timetuple()) if product.coupon.end else "" ,
-            "rules":product.coupon.rules,
-            "discount":product.coupon.discount,
-            "top_money":product.coupon.top_money,
-            "reduce_money":product.coupon.reduce_money,
-            "limit":product.coupon.limit,
-        }
+        if today >= product.coupon.start and today <= product.coupon.end :
+            product_dict['coupon'] =  {
+                "uuid":product.coupon.uuid,
+                "name":product.coupon.name,
+                "coupontype":product.coupon.coupontype,
+                "start":time.mktime (product.coupon.start.timetuple()) if product.coupon.start else "" ,
+                "end":time.mktime (product.coupon.end.timetuple()) if product.coupon.end else "" ,
+                "rules":product.coupon.rules,
+                "discount":product.coupon.discount,
+                "top_money":product.coupon.top_money,
+                "reduce_money":product.coupon.reduce_money,
+                "limit":product.coupon.limit,
+            }
     else:
         product_dict['coupon'] =  None
 

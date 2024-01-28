@@ -47,7 +47,7 @@ class ToolsView(View):
                 productuuid = request.GET['productuuid'] 
                 
                 specs = Specifications.objects.filter(product__uuid = productuuid).\
-                    values("id", "date", "price").order_by("date") 
+                    values("id", "date", "number", "price").order_by("date") 
                 
 
             data = []
@@ -77,6 +77,7 @@ class ToolsView(View):
                         if lastday == spec['date']: 
                             item['price'] = float(spec['price'])
                             item['id'] =  spec['id'] 
+                            item['number'] =  spec['number']
                             break
 
                     data.append(item)
@@ -99,6 +100,7 @@ class ToolsView(View):
                     if daydate == spec['date']: 
                         item['price'] = float(spec['price'])
                         item['id'] =  spec['id'] 
+                        item['number'] =  spec['number']
                         break
                     
                 data.append(item)
