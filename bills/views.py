@@ -452,18 +452,18 @@ class OrderView(APIView):
                     if billtype == Bills.CAR:
                         # 租车不用库存管理  
                         specname = datetime.strftime(spec_instance.date, '%m月%d号')+"租车"
-                      
+                       
                         BillSpec.objects.create(
-                            number = 1,
-                            name = specname,
-                            price = price,
-                            title = spec_instance.product.title,
-                            picture = spec_instance.product.picture,
-                            content = spec['attr_val'] + spec['title'],
-                            bill = bill, 
-                            spec = spec_instance,
-                            money =   price 
-                        ) 
+                                number = 1,
+                                name = specname,
+                                price = price,
+                                title = spec_instance.product.title,
+                                picture = spec_instance.product.picture,
+                                content = specname,
+                                bill = bill, 
+                                spec = spec_instance,
+                                money = price 
+                            )  
                         totalmoney += price
                         
                         subject = "租车"

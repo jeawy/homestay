@@ -44,12 +44,9 @@ class PayView(APIView):
             try:
                 bill = Bills.objects.get(
                     **kwargs)
-                subject = bill.subject
-                specs = BillSpec.objects.filter(bill = bill)
-                money = 0
-                for spec in specs:
-                    money += spec.number * spec.price
-  
+                subject = bill.subject 
+                money = bill.money
+                 
             except Bills.DoesNotExist:
                 content['msg'] = "未找到订单"
                 content['status'] = ERROR
