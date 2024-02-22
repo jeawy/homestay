@@ -2,6 +2,7 @@ from datetime import datetime
 import string
 import random
 import time
+import json
 from bills.models import BillSpec
 
 def getbillno():
@@ -25,7 +26,15 @@ def getbill(bill):
             "receiver":bill.receiver,
             "receiver_phone":bill.receiver_phone,
             "receiver_address":bill.receiver_address,
-            "remark":bill.remark,  
+            "remark":bill.remark, 
+            "billtype":bill.billtype,  
+            
+            "user":{
+                "username" : bill.user.username,
+                "uuid" : bill.user.uuid,
+                "phone" : bill.user.phone,
+                "thumbnail_portait" : bill.user.thumbnail_portait,
+            },
             "status":bill.status,
             "ordertype":bill.ordertype,
             "delivery":bill.delivery,
@@ -46,6 +55,12 @@ def getbill(bill):
         money +=  spec.price * spec.number
     
     result['money'] = money
+    if bill.extras:
+        result['extras'] = json.loads( bill.extras)
+    else:
+        result['extras'] =  []
+
+        
     return result
 
 def get_bill_money(bill):

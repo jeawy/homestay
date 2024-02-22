@@ -231,4 +231,15 @@ class InvalidUsername(models.Model):
     class Meta:
         default_permissions = ()
         db_table = 'invalidusername'
+    
+class MyContaces(models.Model):
+    """
+    常用联系人
+    """
+    user = models.ForeignKey(AdaptorUser, on_delete = models.CASCADE)
+    username = models.CharField(max_length = 256) 
+    number = models.CharField( max_length = 25) 
+    
+    class Meta:
+        default_permissions = () 
         

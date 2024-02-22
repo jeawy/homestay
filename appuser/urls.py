@@ -8,6 +8,8 @@ from django.views.decorators.csrf import csrf_exempt
 from appuser.views_wx import WeixinView
 from appuser.views_community import UserCommunityView
 from appuser.views_ui import UserPortrait
+from appuser.views_contact import UserContactView
+
 
 app_name = "appuser"
 urlpatterns = [
@@ -50,7 +52,7 @@ urlpatterns = [
     #用户批量添加
     url(r'^batch/$',csrf_exempt(UserBatchView.as_view()), name='batch'),
     url(r'^wx/$',csrf_exempt(WeixinView.as_view()), name='Weixin'),
-
+    url(r'^contact/$',csrf_exempt(UserContactView.as_view()), name='contact'), 
     # 单独修改用户头像或背景图
     url(r'^portrait_backimage/$',csrf_exempt(UserPortrait.as_view()), name='userportrait'),
 ]

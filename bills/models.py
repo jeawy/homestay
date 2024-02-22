@@ -32,6 +32,7 @@ class Bills(PayBase):
     NOTENOUGH = 6 #  库存不足
     UNUSUAL = -1  # 异常订单，例如库存不足等
     CLOSED = 9 # 订单已关闭
+    COMMENTED = 10 # 已评价
     status = models.SmallIntegerField(default = UNUSUAL)
     
 
@@ -71,8 +72,9 @@ class Bills(PayBase):
  
     # 配送方式，0 快递，1 自提
     delivery_way = models.PositiveSmallIntegerField(default=0)
-
     
+    # 其他信息，民宿包括入住人信息，租车包括租车人信息
+    extras  = models.TextField(null  = True)
     class Meta:
         ordering = ['-date']
         default_permissions = () 
@@ -155,4 +157,4 @@ class PayCards(models.Model):
 
      
     class Meta:
-        default_permissions = ()
+        default_permissions = ()  

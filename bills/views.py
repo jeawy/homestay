@@ -90,7 +90,12 @@ class OrderConsumerView(View):
                                 # 库存不足
                                 bill.status = bill.NOTENOUGH 
                                 bill.save()
-                                result['msg'] = "库存不足"
+                                if bill.billtype == bill.HOMESTAY: 
+                                   result['msg'] = "房源不足"
+                                elif bill.billtype == bill.CAR: 
+                                   result['msg'] = "车辆不足"
+                                else:
+                                    result['msg'] = "库存不足"
                                 return HttpResponse(json.dumps(result), content_type="application/json")
                         needcoin  = 0 # 总积分，只有当有效
                         for spec in specs:
@@ -267,7 +272,13 @@ class OrderView(APIView):
         if 'billno' in request.GET:
             billno = request.GET['billno']
             kwargs['billno__icontains'] = billno
+
+        if 'billtype' in request.GET:
+            billtype = request.GET['billtype']
+            kwargs['billtype'] = billtype
         
+        
+ 
         kwargs['user'] = user
         kwargs['owner_delete'] = 0 # 本人未删除的订单
               
@@ -404,7 +415,11 @@ class OrderView(APIView):
                     remark = data['remark'] 
                     bill.remark = remark
 
-                
+                if 'extrastxt' in data:
+                    extrastxt = data['extrastxt']
+                    bill.extras = extrastxt
+
+
                 if 'phone' in data:
                     phone = data['phone'] 
                     bill.receiver_phone = phone
