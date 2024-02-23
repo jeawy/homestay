@@ -54,10 +54,10 @@ class CancelOrderView(View):
                 # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
                 redisconn.lpush("bills", bill.uuid+",0") # 发布到队列中
                 print(myredis.publish("consumer", "home_stay_bills")) # 通知订阅者进行消费，更新库存
-
-            bill.owner_delete = 1
-            bill.save()
-                 
+            else:
+                bill.owner_delete = 1
+                bill.save()
+                    
         result['status'] = SUCCESS
         result['msg'] = '删除成功' 
         return HttpResponse(json.dumps(result), content_type="application/json")

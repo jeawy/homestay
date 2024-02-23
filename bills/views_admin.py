@@ -43,6 +43,7 @@ class BillAdminView(APIView):
             # pc端统计
             today = datetime.now().date()
             bills = Bills.objects.filter(
+                platform_delete = 0,
                 status__in = [Bills.PAYED, Bills.DELIVERIED, Bills.FINISHED],
                 ).values("payway", "ordertype")
             totalbills = len(bills) # 总订单数
@@ -58,6 +59,7 @@ class BillAdminView(APIView):
 
             todaymoney = BillSpec.objects.filter(bill__date__gte = today,
                 bill__ordertype = Bills.MONEY,
+                platform_delete = 0,
                 bill__status__in = [Bills.PAYED, Bills.DELIVERIED, Bills.FINISHED]).aggregate(
                     Sum("money")
                 )['money__sum'] # 今日订单总金额
@@ -65,6 +67,7 @@ class BillAdminView(APIView):
             
             totalcoin = BillSpec.objects.filter(
                  bill__ordertype = Bills.COIN,
+                 platform_delete = 0,
                  bill__status__in = [Bills.PAYED, \
                      Bills.DELIVERIED, Bills.FINISHED]).count() # 积分订单数
 
@@ -82,7 +85,7 @@ class BillAdminView(APIView):
         if 'billuuid' in request.GET : 
             billuuid = request.GET['billuuid'] 
             try:
-                bill = Bills.objects.get(uuid = billuuid )
+                bill = Bills.objects.get(platform_delete = 0, uuid = billuuid )
                 if 'checkbill' in request.GET:
                     # 查询支付状态
                     check_orders(bill) 
@@ -92,15 +95,19 @@ class BillAdminView(APIView):
                 result['msg'] = "未找到订单信息"
             return HttpResponse(json.dumps(result), content_type="application/json")
 
-        kwargs = {}
+        kwargs = {
+            "platform_delete" : 0 
+        }
         if 'status' in request.GET:
             status = request.GET['status']
             if status != -1 and status != '-1':
                 kwargs['status'] = status
             else:
                 kwargs['status__in'] = [2,3,4,5]
+                 
         else:
             kwargs['status__in'] = [2,3,4,5]
+             
 
         if 'billno' in request.GET:
             billno = request.GET['billno']
@@ -115,6 +122,10 @@ class BillAdminView(APIView):
             coinbill = request.GET['coinbill']
             if int(coinbill) == 1: # 积分订单
                 kwargs['ordertype'] = Bills.COIN 
+        
+        if 'billtype' in request.GET:
+            billtype = request.GET['billtype'] 
+            kwargs['billtype'] = billtype
 
         if 'cashbill' in request.GET: # 查询现金账单
             cashbill = request.GET['cashbill']
@@ -178,10 +189,13 @@ class BillAdminView(APIView):
             "remark",  
             "ordertype",
             "delivery_way",
+            "extras" ,
             "status",  
         )[page*pagenum: (page+1)*pagenum])
         for order in orders:
             order['date'] = time.mktime(order['date'].timetuple())
+            if order['extras']:
+                order['extras'] = json.loads(order['extras'])
             order['specs'] = list(BillSpec.objects.filter(bill__uuid = order['uuid']).values(
                 "number",
                 "name",
@@ -260,6 +274,19 @@ class BillAdminView(APIView):
             except Bills.DoesNotExist:
                 result['msg'] = "未找到订单信息"
             return HttpResponse(json.dumps(result), content_type="application/json")
+        elif   'billuuid' in data and 'status' in data :
+            billuuid = data['billuuid'] 
+            status = data['status'] 
+            try:
+                
+                bill = Bills.objects.get(uuid = billuuid )  
+                bill.status = status
+                bill.save()
+
+                result['msg'] = "标记完成"
+                result['status']  = SUCCESS
+            except Bills.DoesNotExist:
+                result['msg'] = "未找到订单信息" 
         elif   'billuuid' in data:
             billuuid = data['billuuid'] 
             try:
@@ -293,18 +320,18 @@ class BillAdminView(APIView):
                     continue
                 else:
                     # 删除礼品时删除磁盘中对应的图片和轮播图文件
-                    if bill.status == bill.NON_PAYMENT:
-                         
+                    if bill.status == bill.NON_PAYMENT: 
                         # 还要进行退库
                         # 存入redis队列
                         myredis = RedisSubscri()
                         redisconn = myredis.getconn()
                         # uuid和操作标识符，1表示减库存 操作也就是下单，0表示退库操作
                         redisconn.lpush("bills", bill.uuid+",0") # 发布到队列中
-                        print(myredis.publish("consumer", "bills")) # 通知订阅者进行消费，更新库存
- 
-                    bill.owner_delete = 1
-                    bill.save()
+                        print(myredis.publish("consumer", "bills")) # 通知订阅者进行消费，更新库存 
+                     
+                    else:
+                        bill.platform_delete = 1
+                        bill.save()
                     
             result['status'] = SUCCESS
             result['msg'] = '删除成功'

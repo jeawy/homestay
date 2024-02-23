@@ -26,7 +26,7 @@ class PayBase(BaseDate):
     money = models.FloatField(default=9999999.99) 
 
     # 支付方式 
-    payway = models.PositiveSmallIntegerField(default= ZHIFUBAO)
+    payway = models.PositiveSmallIntegerField(null = True)
     # 支付宝或者微信的订单号
     paybillno = models.CharField(max_length = 256, null = True)
     # 支付宝或者微信购买者账户 
