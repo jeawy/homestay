@@ -26,8 +26,8 @@ class Bills(PayBase):
     NON_PAYMENT = 0
     # 已支付
     PAYED = 2
-    DELIVERIED = 3 # 已发货
-    FINISHED = 4 # 已签收
+    DELIVERIED = 3 # 已发货/已入住/已取车
+    FINISHED = 4 # 已签收/已离店/已还车
     REFUND = 5 #  已退款
     NOTENOUGH = 6 #  库存不足
     UNUSUAL = -1  # 异常订单，例如库存不足等

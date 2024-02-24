@@ -4,6 +4,7 @@ from django.db import models
 from basedatas.models import BaseDate
 from property.entity import EntityType, AttrsTypes
 from django.conf import settings
+from bills.models import Bills 
 import os
 
 
@@ -26,8 +27,11 @@ class Comment(models.Model):
     comeway =  models.SmallIntegerField(default=1)
     # 评分
     rate = models.SmallIntegerField(default=5)
+    
+    # 评价关联的订单
+    bill = models.ForeignKey(Bills, on_delete = models.SET_NULL, null=True)
 
-
+    
     # 实拍度
     real_rate = models.SmallIntegerField(default=5)
     # 服务

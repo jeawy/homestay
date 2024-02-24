@@ -14,6 +14,7 @@ from datetime import datetime
 from common.logutils import getLogger
 import json
 import time
+from bills.models import Bills 
 from comment.comm import get_comments_list, cal_rate , get_comments_sub_list
 from property import settings
 from property.code import * 
@@ -200,7 +201,16 @@ class CommentView(APIView):
                 location_rate = request.POST['location_rate']
                 comment.location_rate = location_rate
 
-
+            if 'billuuid' in request.POST:
+                billuuid = request.POST['billuuid'] 
+                try:
+                    bill = Bills.objects.get(uuid = billuuid)
+                    comment.bill = bill
+                    bill.status = bill.COMMENTED
+                    bill.save()
+                except Bills.DoesNotExist:
+                    result['msg'] = '订单不存在'
+                    return HttpResponse(json.dumps(result), content_type="application/json")
 
             if 'useruuid' in request.POST:
                 useruuid = request.POST['useruuid']

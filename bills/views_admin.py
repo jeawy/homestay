@@ -58,16 +58,14 @@ class BillAdminView(APIView):
                 
 
             todaymoney = BillSpec.objects.filter(bill__date__gte = today,
-                bill__ordertype = Bills.MONEY,
-                platform_delete = 0,
+                bill__ordertype = Bills.MONEY, 
                 bill__status__in = [Bills.PAYED, Bills.DELIVERIED, Bills.FINISHED]).aggregate(
                     Sum("money")
                 )['money__sum'] # 今日订单总金额
 
             
             totalcoin = BillSpec.objects.filter(
-                 bill__ordertype = Bills.COIN,
-                 platform_delete = 0,
+                 bill__ordertype = Bills.COIN, 
                  bill__status__in = [Bills.PAYED, \
                      Bills.DELIVERIED, Bills.FINISHED]).count() # 积分订单数
 

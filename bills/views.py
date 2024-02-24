@@ -320,6 +320,7 @@ class OrderView(APIView):
                 "number",
                 "name",
                 "picture",
+                "spec__product__uuid", # 评价时，获取productuuid
                 "title",
                 "price",
                 "content",
