@@ -97,8 +97,7 @@ class LikeView(APIView):
                         org = Organize.objects.get(uuid = orguuid)
                         NoticeMgr.create(
                             title = title,
-                            content = "", 
-                            organize = org,
+                            content = "",  
                             appurl = appurl, 
                             pcurl = pcurl,
                             entity_type = EntityType.LIKE,

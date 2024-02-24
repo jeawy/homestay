@@ -91,8 +91,7 @@ def create_aid_service_notice( order):
     NoticeMgr.create(
         title="有偿求助:" + order.aid.title, 
         content = order.aid.content,
-        appurl = "/pages/aid/detail?uuid="+str(order.aid.uuid),
-        community= order.aid.community,
+        appurl = "/pages/aid/detail?uuid="+str(order.aid.uuid), 
         entity_type= EntityType.AID
     )
     
@@ -130,8 +129,7 @@ def thread_create_paid_service_notice(community):
     NoticeMgr.create(
         title="新的有偿服务请求", 
         content = "有新的有偿服务订单",
-        pcurl = "/paidservice/paidservice",
-        community= community,
+        pcurl = "/paidservice/paidservice", 
         entity_type= EntityType.PAIDSERVICE
     )
     if community.paidservice_msg:

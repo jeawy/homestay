@@ -222,8 +222,7 @@ class RepairView(APIView):
             # 添加通知
             NoticeMgr.create(title =   "新维修单",
                                 level = 0, 
-                                content = facility,
-                                community=community,
+                                content = facility, 
                                 url='/repair/repair/?uuid='+str(repair.uuid),
                                 entity_type=REPAIR, 
                                 entity_uuid=repair.uuid)

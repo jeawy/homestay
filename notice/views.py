@@ -8,9 +8,7 @@ from django.utils.translation import ugettext as _
 from notice.models import Notice   
 from rest_framework.views import APIView 
 from property.code import SUCCESS, ERROR
-from django.conf import settings
-from organize.comm import getUserOrganize
-
+from django.conf import settings 
 
 def get_notice_dict(notice):
     '''

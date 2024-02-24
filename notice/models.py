@@ -2,9 +2,7 @@
 from statistics import mode
 from django.db import models 
 from basedatas.models import BaseDate
-from appuser.models import AdaptorUser as User
-from community.models import Community 
-from organize.models import Organize
+from appuser.models import AdaptorUser as User  
 
 
 class Notice(BaseDate):
@@ -32,8 +30,6 @@ class Notice(BaseDate):
     entity_type = models.SmallIntegerField(null = True)
     # 业务uuid， 方便将来对应的删除通知uuid
     entity_uuid = models.CharField(null = True, max_length=64)
-    # 小区接收通知(给业主的)
-    community = models.ForeignKey(Community,null=True, on_delete=models.CASCADE)
      
     # 1表示发给平台的通知，
     platform = models.PositiveSmallIntegerField(default= 0)

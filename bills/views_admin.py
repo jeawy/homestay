@@ -101,10 +101,10 @@ class BillAdminView(APIView):
             if status != -1 and status != '-1':
                 kwargs['status'] = status
             else:
-                kwargs['status__in'] = [2,3,4,5]
+                kwargs['status__in'] = [2,3,4,5, 10]
                  
         else:
-            kwargs['status__in'] = [2,3,4,5]
+            kwargs['status__in'] = [2,3,4,5, 10]
              
 
         if 'billno' in request.GET:

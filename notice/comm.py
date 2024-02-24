@@ -47,7 +47,7 @@ class NoticeMgr(object):
                        entity_uuid=entity_uuid, Email=Email, SMS=SMS)
 
     @classmethod
-    def create(cls, title,content,  level=AVERAGE, user=None, community=None,  
+    def create(cls, title,content,  level=AVERAGE, user=None,    
                appurl=None, pcurl=None, entity_type=None,
                entity_uuid=None,  platform=None, Email=True  ):
         """
@@ -75,15 +75,14 @@ class NoticeMgr(object):
             notice.entity_type = entity_type
         if entity_uuid:
             notice.entity_uuid = entity_uuid
-        if community:
-            notice.community = community
+       
          
         if platform:
             notice.platform = platform
         notice.save()
           
     @classmethod
-    def delete(cls,  entity_type, entity_uuid,community=None, user=None):
+    def delete(cls,  entity_type, entity_uuid,  user=None):
         """
         添加通知
         :param user: 接收用户
@@ -94,11 +93,7 @@ class NoticeMgr(object):
         if user:
                 Notice.objects.filter(
                 receiver=user, entity_type=entity_type, entity_uuid=entity_uuid).delete()
-        if community:
-                Notice.objects.filter(
-                    community = community,
-                    entity_type=entity_type, entity_uuid=entity_uuid).delete()
-             
+        
 
     @classmethod
     def complete_by_id(cls, user, title, level, content, url=None, entity_type=None,

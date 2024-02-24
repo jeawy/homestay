@@ -207,7 +207,17 @@ class CommentView(APIView):
                     bill = Bills.objects.get(uuid = billuuid)
                     comment.bill = bill
                     bill.status = bill.COMMENTED
-                    bill.save()
+                    bill.save() 
+                    pcurl = "/product-manage/product-detail?uuid="+entity_uuid
+                    title = bill.billno + "【已评价】"
+                    NoticeMgr.create(
+                        title = title,
+                        content = content,  
+                        pcurl = pcurl,
+                        entity_type = EntityType.COMMENT,
+                        entity_uuid = entity_uuid  ,
+                        platform = 1
+                    )
                 except Bills.DoesNotExist:
                     result['msg'] = '订单不存在'
                     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -269,9 +279,7 @@ class CommentView(APIView):
                     org = Organize.objects.get(uuid = orguuid)
                     NoticeMgr.create(
                         title = title,
-                        content = content, 
-                        organize = org,
-                        appurl = appurl, 
+                        content = content,   
                         pcurl = pcurl,
                         entity_type = EntityType.COMMENT,
                         entity_uuid = entity_uuid  

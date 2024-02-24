@@ -173,8 +173,7 @@ class ProRepairView(APIView):
         result['msg'] = str(prorepair.uuid)
         # 添加通知
         NoticeMgr.create(title="新维修单", 
-                         content = content,
-                         community=community,
+                         content = content, 
                          pcurl='/repair/repair-list/',
                          entity_type=EntityType.REPAIR, 
                          entity_uuid=prorepair.uuid)
@@ -273,8 +272,7 @@ class ProRepairView(APIView):
                 NoticeMgr.create(title="维修单已完成",
                                  level=0,
                                  user=prorepair.user,
-                                 content="您提交的维修单已完成，请查看",
-                                 community=community,
+                                 content="您提交的维修单已完成，请查看", 
                                  appurl='/pages/repair/detail?uuid=' +
                                      str(prorepair.uuid),
                                  entity_type= EntityType.REPAIR, entity_uuid=prorepair.uuid)
